@@ -1,2 +1,2 @@
-from custom import CustomNet
-from resnet import ResNet
+from .custom import CustomNet
+from .resnet import ResNet
