@@ -37,7 +37,6 @@ def clean_text(text: str) -> str:
 # 1) 데이터 로더
 # ------------------------------------------------------------
 def make_dataloaders(tokenizer,
-                     vocab,
                      train_texts,
                      test_texts,
                      train_labels,
@@ -45,9 +44,10 @@ def make_dataloaders(tokenizer,
                      batch_size=128,
                      num_workers=4,
                      max_len=400):
+    vocab = tokenizer.get_vocab()
     pad_idx = vocab["[PAD]"]
-    train_ds = ReviewDataset(train_texts, train_labels, vocab, tokenizer, max_len)
-    test_ds  = ReviewDataset(test_texts,  test_labels,  vocab, tokenizer, max_len)
+    train_ds = ReviewDataset(train_texts, train_labels, tokenizer, max_len)
+    test_ds  = ReviewDataset(test_texts,  test_labels, tokenizer, max_len)
     
     def collate_fn(batch):
         ids_list, lengths, labels = [], [], []
@@ -55,6 +55,7 @@ def make_dataloaders(tokenizer,
             ids_list.append(ids)
             lengths.append(length)
             labels.append(label)
+        
         padded = pad_sequence(ids_list, batch_first=True, padding_value=pad_idx)
         lengths = torch.tensor(lengths, dtype=torch.long)
         labels = torch.stack(labels)  # float tensor [B]
@@ -233,7 +234,6 @@ def run_experiment(
 
     train_loader, test_loader = make_dataloaders(
         tokenizer=tokenizer,
-        vocab=vocab,
         train_texts=train_texts,
         test_texts=test_texts,
         train_labels=ds["train"]['label'],
@@ -279,4 +279,4 @@ def build_lstm_classfication(vocab_size,
                              bidirectional, 
                              dropout, 
                              pad_idx):
-    return LSTM_Classification(vocab_size, embed_dim, hidden_dim, num_layers, bidirectional, dropout, pad_idx)
+    return LSTMClassifier(vocab_size, embed_dim, hidden_dim, num_layers, bidirectional, dropout, pad_idx)
