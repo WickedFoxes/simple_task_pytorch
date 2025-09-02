@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from torchvision.models import resnet18
 
-from models import CustomNet, ResNet
+from models import CustomNet, ResNet_mini
 
 # ------------------------------------------------------------
 # 0) 재현성 고정
@@ -242,6 +242,9 @@ def run_experiment(
 # from your_module import CustomNet  # 이미 정의되어 있다고 가정
 def build_customnet():
     return CustomNet(num_classes=10)
+
+def build_resnet_mini():
+    return ResNet_mini(num_classes=10)
 
 if __name__ == "__main__":
     # 동일한 하이퍼파라미터로 두 모델 비교
