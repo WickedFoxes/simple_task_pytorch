@@ -136,7 +136,7 @@ def fit(
     model,
     train_loader,
     test_loader,
-    epochs=50,
+    epochs=20,
     lr=0.1,
     weight_decay=5e-4,
     momentum=0.9,
@@ -208,14 +208,15 @@ def fit(
 def run_experiment(
     model_builder,
     model_name: str,
-    epochs=150,
+    epochs=20,
     batch_size=128,
-    lr=0.1,
+    lr=0.001,
     weight_decay=5e-4,
     momentum=0.9,
     scheduler_type="cosine",
     seed=42,
     num_workers=4,
+    max_len=400,
 ):
     """
     동일한 설정으로 모델을 학습/평가하고 결과를 반환.
@@ -240,7 +241,7 @@ def run_experiment(
         test_labels=ds["test"]['label'],
         batch_size=batch_size,
         num_workers=num_workers,
-        max_len=400,
+        max_len=max_len,
     )
 
     model = model_builder(
