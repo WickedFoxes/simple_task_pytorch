@@ -17,7 +17,7 @@ from torch.nn.utils.rnn import pad_sequence
 from transformers import AutoTokenizer
 
 from data import ReviewDataset
-from models import LSTM_Classification
+from models import LSTMClassifier
 
 def set_seed(seed: int = 42):
     random.seed(seed)
