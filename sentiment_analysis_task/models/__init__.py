@@ -1,1 +1,1 @@
-from .lstm_classfication import LSTM_Classification
+from .lstm_classfication import LSTMClassifier
