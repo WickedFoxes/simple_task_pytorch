@@ -12,7 +12,7 @@ class ReviewDataset(Dataset):
         self.vocab = vocab
         self.tokenizer = tokenizer
         self.max_len = max_len
-        self.unk_idx = self.vocab["<unk>"]
+        self.unk_idx = self.vocab["[UNK]"]
 
     def __len__(self):
         return len(self.labels)
