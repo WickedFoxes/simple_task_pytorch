@@ -129,6 +129,48 @@ class Bottleneck(nn.Module):
         return out
     
 
+class ResNet_mini(nn.Module):
+    def __init__(
+    self,
+    num_classes : int=10,
+    )-> None:
+        super(ResNet_mini, self).__init__()
+        self.norm_layer = nn.BatchNorm2d
+        self.layer1 = self._make_layer(3, 64)
+        self.layer2 = self._make_layer(64, 128)
+        self.layer3 = self._make_layer(128, 256)
+        self.avgpool = nn.AdaptiveAvgPool2d((1,1))
+        self.fc = nn.Linear(256, num_classes)
+
+    def _make_layer(self, inplanes, planes):
+        layers = []
+        downsample = nn.Sequential(
+            conv1x1(inplanes, planes, 2),
+            self.norm_layer(planes),
+        )
+        layers.append(BasicBlock(inplanes=inplanes, 
+                                 planes=planes, 
+                                 stride=2,
+                                 downsample=downsample,
+                                 norm_layer=self.norm_layer))
+        layers.append(BasicBlock(inplanes=planes, 
+                            planes=planes, 
+                            norm_layer=self.norm_layer))
+        return nn.Sequential(*layers)
+
+    def forward(self, x:Tensor) -> Tensor:
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        x = self.fc(x)
+
+        return x
+    
+
+
 class ResNet(nn.Module):
     def __init__(
     self,

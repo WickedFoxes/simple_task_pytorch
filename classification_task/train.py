@@ -22,7 +22,7 @@ def set_seed(seed: int = 42):
 # ------------------------------------------------------------
 # 1) 데이터 로더
 # ------------------------------------------------------------
-def build_dataloaders(
+def build_cifar10_dataloaders(
     data_root="./data",
     batch_size=128,
     num_workers=4,
@@ -67,8 +67,8 @@ def build_dataloaders(
 # 3) 학습/평가 루프
 # ------------------------------------------------------------
 def accuracy_from_logits(logits, targets):
-    preds = logits.argmax(dim=1)
-    return (preds == targets).float().mean().item()
+    preds = logits.argmax(dim=1) # 가장 큰 값 logits 값의 index를 출력
+    return (preds == targets).float().mean().item() # 정확도를 0.0 ~ 1.0 사이의 수치로 표현
 
 def train_one_epoch(model, loader, optimizer, scaler, device, criterion):
     model.train()
@@ -124,6 +124,7 @@ def fit(
     device=None,
     use_amp=True,
     scheduler_type="cosine",
+    optimizer="SGD",
 ):
     """
     동일한 학습 조건으로 모델을 학습/평가합니다.
@@ -134,8 +135,15 @@ def fit(
     model = model.to(device)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
+    # 옵티마이저 선택
+    if optimizer == 'Adam':
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    elif optimizer == 'SGD':
+        optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
+    elif optimizer == 'AdamW':
+        optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 
+    # 스케줄 선택
     if scheduler_type == "cosine":
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
     elif scheduler_type == "multistep":
@@ -200,7 +208,7 @@ def run_experiment(
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Device: {device}")
 
-    train_loader, test_loader = build_dataloaders(
+    train_loader, test_loader = build_cifar10_dataloaders(
         data_root=data_root,
         batch_size=batch_size,
         num_workers=num_workers,
