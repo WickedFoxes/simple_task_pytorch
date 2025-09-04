@@ -253,6 +253,12 @@ def run_experiment(
         dropout=0.3,
         pad_idx=pad_idx,
     )
+    
+    
+    total_params = sum(p.numel() for p in model.parameters())
+    print(f"{model_name} Total parameters: {total_params/1000000}M")
+
+
     history, best_state = fit(
         model=model,
         train_loader=train_loader,

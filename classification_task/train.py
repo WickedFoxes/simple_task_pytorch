@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-import os, random
+import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
-from torchvision.models import resnet18
 
 from models import CustomNet, ResNet_mini
 
@@ -216,6 +215,10 @@ def run_experiment(
     )
 
     model = model_builder()
+
+    total_params = sum(p.numel() for p in model.parameters())
+    print(f"{model_name} Total parameters: {total_params/1000000}M")
+
     history, best_state = fit(
         model=model,
         train_loader=train_loader,
