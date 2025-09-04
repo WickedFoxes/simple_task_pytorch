@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from torchvision.models import resnet18
 
-from .models import CustomNet, ResNet_mini
+from models import CustomNet, ResNet_mini
 
 # ------------------------------------------------------------
 # 0) 재현성 고정
