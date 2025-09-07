@@ -280,6 +280,7 @@ def run_experiment(
     data_dir="./data",
     num_workers=4,
     img_size=224,
+    patience=20,
 ):
     """
     동일한 설정으로 모델을 학습/평가하고 결과를 반환.
@@ -313,19 +314,16 @@ def run_experiment(
         use_amp=True,
         scheduler_type=scheduler_type,
         optimizer=optimizer_type,
+        patience=patience,
     )
 
     # best checkpoint 저장(선택)
-    ckpt_path = f"./{model_name}_cifar10_best.pth"
+    ckpt_path = f"./{model_name}_best.pth"
     torch.save({"model": best_state, "meta": {"model_name": model_name}}, ckpt_path)
     print(f"Saved best checkpoint to: {ckpt_path}")
     return history, best_state
 
-# ------------------------------------------------------------
-# 5) 사용 예시
-# ------------------------------------------------------------
-# (1) CustomNet 실험
-# from your_module import CustomNet  # 이미 정의되어 있다고 가정
+
 def build_customnet(num_classes=10):
     return CustomNet(num_classes=num_classes)
 

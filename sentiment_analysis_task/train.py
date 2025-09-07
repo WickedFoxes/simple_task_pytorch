@@ -246,6 +246,7 @@ def run_experiment(
     seed=42,
     num_workers=4,
     max_len=400,
+    patience=20,
 ):
     """
     동일한 설정으로 모델을 학습/평가하고 결과를 반환.
@@ -300,6 +301,7 @@ def run_experiment(
         use_amp=True,
         scheduler_type=scheduler_type,
         optimizer=optimizer_type,
+        patience=patience,
     )
 
     # best checkpoint 저장(선택)
