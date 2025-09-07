@@ -1,11 +1,8 @@
-import os
 import re
-import math
 import random
-import argparse
+import time
 import numpy as np
 import pandas as pd
-from dataclasses import dataclass
 from datasets import load_dataset
 
 
@@ -136,18 +133,22 @@ def fit(
     model,
     train_loader,
     test_loader,
-    epochs=20,
+    epochs=50,
     lr=0.1,
     weight_decay=5e-4,
     momentum=0.9,
     device=None,
     use_amp=True,
     scheduler_type="cosine",
-    optimizer="AdamW",
+    optimizer="SGD",
+    patience=10,          # 조기 중단: 성능 향상을 기다리는 최대 epoch 수
+    min_delta=1e-4        # 성능 향상으로 인정할 최소 개선 폭
 ):
     """
     동일한 학습 조건으로 모델을 학습/평가합니다.
     - scheduler_type: "cosine", "multistep", None
+    - patience: 조기 중단 기준 epoch 수
+    - min_delta: 성능 향상으로 인정할 최소 개선 폭
     반환: history(dict), best_state_dict
     """
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -166,43 +167,70 @@ def fit(
     if scheduler_type == "cosine":
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
     elif scheduler_type == "multistep":
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[int(epochs*0.5), int(epochs*0.75)], gamma=0.1)
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(
+            optimizer,
+            milestones=[int(epochs*0.5), int(epochs*0.75)],
+            gamma=0.1
+        )
     else:
         scheduler = None
 
     scaler = torch.cuda.amp.GradScaler() if (use_amp and device.startswith("cuda")) else None
 
     best_acc = 0.0
+    best_epoch = 0
     best_state = None
     history = {
         "train_loss": [], "train_acc": [],
         "test_loss": [], "test_acc": [],
-        "lr": []
+        "lr": [], "time": []
     }
 
+    # 조기 중단 변수
+    patience_counter = 0
+
     for epoch in range(1, epochs+1):
+        start_time = time.time()
+
         train_loss, train_acc = train_one_epoch(model, train_loader, optimizer, scaler, device, criterion)
         test_loss, test_acc   = evaluate(model, test_loader, device, criterion)
+
         if scheduler is not None:
             scheduler.step()
 
-        if test_acc > best_acc:
+        # 베스트 모델 저장 및 early stopping 체크
+        if test_acc > best_acc + min_delta:
             best_acc = test_acc
+            best_epoch = epoch
             best_state = {k: v.cpu() for k, v in model.state_dict().items()}
+            patience_counter = 0  # 향상이 있으면 카운터 초기화
+            print(f"New best accuracy: {best_acc:.4f} at epoch {epoch}")
+        else:
+            patience_counter += 1
+
+        # 조기 중단 조건 만족 시 종료
+        if patience_counter >= patience:
+            print(f"Early stopping at epoch {epoch} (no improvement in {patience} epochs)")
+            print(f"Best accuracy: {best_acc:.4f} at epoch {best_epoch}")
+            break
 
         current_lr = optimizer.param_groups[0]["lr"]
+        elapsed_time = time.time() - start_time
+
         history["train_loss"].append(train_loss)
         history["train_acc"].append(train_acc)
         history["test_loss"].append(test_loss)
         history["test_acc"].append(test_acc)
         history["lr"].append(current_lr)
+        history["time"].append(elapsed_time)
 
         print(f"[{epoch:03d}/{epochs}] "
               f"train_loss={train_loss:.4f} acc={train_acc:.4f} | "
-              f"test_loss={test_loss:.4f} acc={test_acc:.4f} | lr={current_lr:.5f}")
-
+              f"test_loss={test_loss:.4f} acc={test_acc:.4f} | "
+              f"lr={current_lr:.5f} | time={elapsed_time:.2f}s | "
+              f"patience: {patience_counter}/{patience}")
+    print(f"Training completed. Final best accuracy: {best_acc:.4f}")
     return history, best_state
-
 
 
 def run_experiment(
@@ -214,6 +242,7 @@ def run_experiment(
     weight_decay=5e-4,
     momentum=0.9,
     scheduler_type="cosine",
+    optimizer_type="AdamW",
     seed=42,
     num_workers=4,
     max_len=400,
@@ -270,6 +299,7 @@ def run_experiment(
         device=device,
         use_amp=True,
         scheduler_type=scheduler_type,
+        optimizer=optimizer_type,
     )
 
     # best checkpoint 저장(선택)
