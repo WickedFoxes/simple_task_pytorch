@@ -326,8 +326,8 @@ def run_experiment(
 # ------------------------------------------------------------
 # (1) CustomNet 실험
 # from your_module import CustomNet  # 이미 정의되어 있다고 가정
-def build_customnet():
-    return CustomNet(num_classes=10)
+def build_customnet(num_classes=10):
+    return CustomNet(num_classes=num_classes)
 
-def build_resnet_mini():
-    return ResNet_mini(num_classes=10)
+def build_resnet_mini(num_classes=10):
+    return ResNet_mini(num_classes=num_classes)
