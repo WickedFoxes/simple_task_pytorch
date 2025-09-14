@@ -70,6 +70,57 @@ class BasicBlock(nn.Module):
 
         return out
 
+class BasicBlock_v2(nn.Module):
+    expansion: int = 1
+
+    def __init__(
+        self,
+        inplanes: int,
+        planes: int,
+        stride: int = 1,
+        downsample: Optional[nn.Module] = None,
+        groups: int = 1,
+        base_width: int = 64,
+        dilation: int = 1,
+        norm_layer: Optional[Callable[..., nn.Module]] = None,
+    ) -> None:
+        super().__init__()
+        if norm_layer is None:
+            norm_layer = nn.BatchNorm2d
+        if groups != 1 or base_width != 64:
+            raise ValueError("BasicBlock only supports groups=1 and base_width=64")
+        if dilation > 1:
+            raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
+        # Both self.conv1 and self.downsample layers downsample the input when stride != 1
+        
+        self.bn1 = norm_layer(inplanes)
+        self.conv1 = conv3x3(inplanes, planes, stride)
+        
+        self.bn2 = norm_layer(planes)
+        self.conv2 = conv3x3(planes, planes)
+        
+        self.relu = nn.ReLU(inplace=True)
+        self.downsample = downsample
+        self.stride = stride
+
+    def forward(self, x: Tensor) -> Tensor:
+        identity = x
+
+        out = self.bn1(x)
+        out = self.relu(out)
+        out = self.conv1(out)
+
+        out = self.bn2(out)
+        out = self.relu(out)
+        out = self.conv2(out)
+
+        if self.downsample is not None:
+            identity = self.downsample(x)
+
+        out += identity
+
+        return out
+
 
 class Bottleneck(nn.Module):
     # Bottleneck in torchvision places the stride for downsampling at 3x3 convolution(self.conv2)
@@ -127,7 +178,60 @@ class Bottleneck(nn.Module):
         out = self.relu(out)
 
         return out
-    
+
+class Bottleneck_v2(nn.Module):
+    def __init__(
+        self,
+        inplanes: int,
+        planes: int,
+        stride: int = 1,
+        downsample: Optional[nn.Module] = None,
+        groups: int = 1,
+        base_width: int = 64,
+        dilation: int = 1,
+        norm_layer: Optional[Callable[..., nn.Module]] = None,
+    ) -> None:
+        super().__init__()
+        if norm_layer is None:
+            norm_layer = nn.BatchNorm2d
+        width = int(planes * (base_width / 64.0)) * groups
+        
+        self.bn1 = norm_layer(inplanes)
+        self.conv1 = conv1x1(inplanes, width)
+        
+        self.bn2 = norm_layer(width)
+        self.conv2 = conv3x3(width, width, stride, groups, dilation)
+        
+        self.bn3 = norm_layer(width)
+        self.conv3 = conv1x1(width, planes * self.expansion)
+        
+        self.relu = nn.ReLU(inplace=True)
+        self.downsample = downsample
+        self.stride = stride
+
+    def forward(self, x: Tensor) -> Tensor:
+        identity = x
+
+        out = self.bn1(x)
+        out = self.relu(out)
+        out = self.conv1(out)
+
+        out = self.bn2(out)
+        out = self.relu(out)
+        out = self.conv2(out)
+        
+        out = self.bn3(out)
+        out = self.relu(out)
+        out = self.conv3(out)
+
+        if self.downsample is not None:
+            identity = self.downsample(x)
+
+        out += identity
+        
+
+        return out
+
 
 class ResNet_mini(nn.Module):
     def __init__(
@@ -169,6 +273,45 @@ class ResNet_mini(nn.Module):
 
         return x
     
+class ResNet_mini_v2(nn.Module):
+    def __init__(
+    self,
+    num_classes : int=10,
+    )-> None:
+        super(ResNet_mini, self).__init__()
+        self.norm_layer = nn.BatchNorm2d
+        self.layer1 = self._make_layer(3, 64)
+        self.layer2 = self._make_layer(64, 128)
+        self.layer3 = self._make_layer(128, 256)
+        self.avgpool = nn.AdaptiveAvgPool2d((1,1))
+        self.fc = nn.Linear(256, num_classes)
+
+    def _make_layer(self, inplanes, planes):
+        layers = []
+        downsample = nn.Sequential(
+            conv1x1(inplanes, planes, 2),
+            self.norm_layer(planes),
+        )
+        layers.append(BasicBlock_v2(inplanes=inplanes, 
+                                 planes=planes, 
+                                 stride=2,
+                                 downsample=downsample,
+                                 norm_layer=self.norm_layer))
+        layers.append(BasicBlock_v2(inplanes=planes, 
+                            planes=planes, 
+                            norm_layer=self.norm_layer))
+        return nn.Sequential(*layers)
+
+    def forward(self, x:Tensor) -> Tensor:
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        x = self.fc(x)
+
+        return x
 
 
 class ResNet(nn.Module):
