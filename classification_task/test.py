@@ -23,7 +23,7 @@ if __name__ == '__main__':
                         help='random seed')
     parser.add_argument('--num_workers', default=4, type=int,
                         help='number of workers for data loading')
-    parser.add_argument('--img_size', default=224, type=int,
+    parser.add_argument('--img_size', default=32, type=int,
                         help='image size')
     parser.add_argument('--num_classes', default=10, type=int,
                         help='number of classes')
