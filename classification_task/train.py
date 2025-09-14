@@ -232,7 +232,7 @@ if __name__ == '__main__':
         device=device,
         use_amp=True,
         scheduler_type=scheduler_type,
-        optimizer=optimizer_type,
+        optimizer_type=optimizer_type,
         patience=patience,
     )
 
