@@ -62,7 +62,8 @@ if __name__ == '__main__':
     elif model_name == 'custom':
         model = CustomNet(num_classes=num_classes)
 
-    model.load_state_dict(torch.load(ckpt_path))
+    ckpt = torch.load(ckpt_path, map_location="cpu")
+    model.load_state_dict(ckpt["model"])
     model.eval()
 
     # 손실 함수 빌드
