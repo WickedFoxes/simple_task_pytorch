@@ -136,23 +136,23 @@ def fit(
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Image Classification Training')
-    parser.add_argument('-m', '--model', default='resnet', type=str,
+    parser.add_argument('--model', default='resnet', type=str,
                         help='path to dataset')
     parser.add_argument('--data_dir', default='./data', type=str,
                         help='path to dataset')
-    parser.add_argument('-d', '--dataset', default='cifar10', type=str,
+    parser.add_argument('--dataset', default='cifar10', type=str,
                         help='path to dataset')
-    parser.add_argument('-b', '--batch_size', default=128, type=int,
+    parser.add_argument('--batch_size', default=128, type=int,
                         help='batch size')
-    parser.add_argument('-e', '--epochs', default=50, type=int,
+    parser.add_argument('--epochs', default=50, type=int,
                         help='number of epochs')
-    parser.add_argument('-lr', '--learning_rate', default=0.1, type=float,
+    parser.add_argument('--learning_rate', default=0.1, type=float,
                         help='learning rate')
-    parser.add_argument('-wd', '--weight_decay', default=5e-4, type=float,
+    parser.add_argument('--weight_decay', default=5e-4, type=float,
                         help='weight decay')
-    parser.add_argument('-m', '--momentum', default=0.9, type=float,
+    parser.add_argument('--momentum', default=0.9, type=float,
                         help='momentum')
-    parser.add_argument('-s', '--seed', default=42, type=int,
+    parser.add_argument('--seed', default=42, type=int,
                         help='random seed')
     parser.add_argument('--use_aug', action='store_true',
                         help='use data augmentation')
@@ -236,6 +236,8 @@ if __name__ == '__main__':
         patience=patience,
     )
 
+    os.makedirs(ckpt_dir, exist_ok=True)
     ckpt_path = os.path.join(ckpt_dir, f"{model_name}_best.pth")
+
     torch.save({"model": best_state, "meta": {"model_name": model_name}}, ckpt_path)
     print(f"Saved best checkpoint to: {ckpt_path}")

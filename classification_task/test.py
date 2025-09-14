@@ -13,13 +13,13 @@ from utils.util import set_seed
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-m', '--model', default='resnet', type=str, help='model name')
+    parser.add_argument('--model', default='resnet', type=str, help='model name')
     parser.add_argument('--chk_path', type=str, required=True, help='the checkpoint file you want to test')
     parser.add_argument('--data_dir', default='./data', type=str,
                     help='path to dataset')
-    parser.add_argument('-b', '--batch_size', default=128, type=int,
+    parser.add_argument('--batch_size', default=128, type=int,
                         help='batch size')
-    parser.add_argument('-s', '--seed', default=42, type=int,
+    parser.add_argument('--seed', default=42, type=int,
                         help='random seed')
     parser.add_argument('--num_workers', default=4, type=int,
                         help='number of workers for data loading')
