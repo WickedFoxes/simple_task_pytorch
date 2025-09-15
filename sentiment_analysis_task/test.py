@@ -3,11 +3,12 @@ import time
 import argparse
 import torch
 
-from models.lstm_classification import LSTM_Classification
 from utils.datasets import get_imdb_test_dataloader
 from utils.evaluate import accuracy
 from utils.loss import build_loss
 from utils.util import set_seed
+
+from models import LSTM_Classification
 
 from transformers import AutoTokenizer
 
