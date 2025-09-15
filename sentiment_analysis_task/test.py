@@ -8,7 +8,7 @@ from utils.evaluate import accuracy
 from utils.loss import build_loss
 from utils.util import set_seed
 
-from models import LSTM_Classification
+from models import LSTMClassifier
 
 from transformers import AutoTokenizer
 
@@ -79,7 +79,7 @@ if __name__ == '__main__':
         )
 
     if model_name == 'lstm_classification':
-        model = LSTM_Classification(
+        model = LSTMClassifier(
             vocab_size=len(vocab),
             embed_dim=embed_dim,
             hidden_dim=hidden_dim,

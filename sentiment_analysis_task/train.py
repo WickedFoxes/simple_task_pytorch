@@ -15,7 +15,7 @@ from utils.evaluate import evaluate, accuracy
 from utils.loss import build_loss
 from utils.datasets import get_imdb_train_dataloader
 
-from models import LSTM_Classification
+from models import LSTMClassifier
 
 def train_one_epoch(model, loader, optimizer, scaler, device, criterion, max_grad_norm = 1.0):
     model.train()
@@ -245,7 +245,7 @@ if __name__ == '__main__':
         )
     
     if model_name == 'lstm_classification':
-        model = LSTM_Classification(
+        model = LSTMClassifier(
             vocab_size=len(vocab),
             embed_dim=embed_dim,
             hidden_dim=hidden_dim,
