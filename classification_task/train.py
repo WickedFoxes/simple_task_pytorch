@@ -137,11 +137,11 @@ def fit(
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Image Classification Training')
     parser.add_argument('--model', default='resnet', type=str,
-                        help='path to dataset')
+                        help='model name')
     parser.add_argument('--data_dir', default='./data', type=str,
-                        help='path to dataset')
+                        help='path to image data')
     parser.add_argument('--dataset', default='cifar10', type=str,
-                        help='path to dataset')
+                        help='dataset name')
     parser.add_argument('--batch_size', default=128, type=int,
                         help='batch size')
     parser.add_argument('--epochs', default=50, type=int,

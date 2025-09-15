@@ -1,82 +1,21 @@
-import re
-import random
+import os
 import time
-import numpy as np
-import pandas as pd
+import argparse
+
 from datasets import load_dataset
-
-
-import torch
-from torch.utils.data import DataLoader
-import torch.nn as nn
-from torch.nn.utils.rnn import pad_sequence
-
 from transformers import AutoTokenizer
 
-from data import ReviewDataset
-from models import LSTMClassifier
+import torch
+import torch.nn as nn
 
-def set_seed(seed: int = 42):
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
+from utils.util import set_seed
+from utils.scheduler import build_scheduler
+from utils.optimizer import build_optimizer
+from utils.evaluate import evaluate, accuracy
+from utils.loss import build_loss
+from utils.datasets import get_imdb_train_dataloader
 
-def clean_text(text: str) -> str:
-    # HTML 태그/줄바꿈 제거, 공백 정리
-    text = re.sub(r"<[^>]+>", " ", str(text))
-    text = text.replace("\n", " ").replace("\r", " ")
-    text = re.sub(r"\s+", " ", text).strip()
-    return text
-
-
-# ------------------------------------------------------------
-# 1) 데이터 로더
-# ------------------------------------------------------------
-def make_dataloaders(tokenizer,
-                     train_texts,
-                     test_texts,
-                     train_labels,
-                     test_labels,
-                     batch_size=128,
-                     num_workers=4,
-                     max_len=400):
-    vocab = tokenizer.get_vocab()
-    pad_idx = vocab["[PAD]"]
-    train_ds = ReviewDataset(train_texts, train_labels, tokenizer, max_len)
-    test_ds  = ReviewDataset(test_texts,  test_labels, tokenizer, max_len)
-    
-    def collate_fn(batch):
-        ids_list, lengths, labels = [], [], []
-        for ids, length, label in batch:
-            ids_list.append(ids)
-            lengths.append(length)
-            labels.append(label)
-        
-        padded = pad_sequence(ids_list, batch_first=True, padding_value=pad_idx)
-        lengths = torch.tensor(lengths, dtype=torch.long)
-        labels = torch.stack(labels)  # float tensor [B]
-        return padded, lengths, labels
-
-    train_loader = DataLoader(
-        train_ds, batch_size=batch_size, shuffle=True,
-        num_workers=num_workers, pin_memory=True, collate_fn=collate_fn
-    )
-    test_loader = DataLoader(
-        test_ds, batch_size=batch_size, shuffle=False,
-        num_workers=num_workers, pin_memory=True, collate_fn=collate_fn
-    )
-    return train_loader, test_loader
-
-
-# ----------------------------
-# 2) 학습/평가 루프
-# ----------------------------
-def binary_accuracy_from_logits(logits, y):
-    # logits: raw score, y: {0,1} float
-    preds = (torch.sigmoid(logits) >= 0.5).float()
-    return (preds == y).float().mean().item()
-
+from models.lstm_classification import LSTM_Classification
 
 def train_one_epoch(model, loader, optimizer, scaler, device, criterion, max_grad_norm = 1.0):
     model.train()
@@ -106,27 +45,9 @@ def train_one_epoch(model, loader, optimizer, scaler, device, criterion, max_gra
 
         bs = labels.size(0)
         total_loss += loss.item() * bs
-        total_acc  += binary_accuracy_from_logits(logits.detach(), labels) * bs
+        total_acc  += accuracy(logits.detach(), labels) * bs
         n += bs
     return total_loss / n, total_acc / n
-
-
-@torch.no_grad()
-def evaluate(model, loader, device, criterion):
-    model.eval()
-    total_loss, total_acc, n = 0.0, 0.0, 0
-    for input_ids, lengths, labels in loader:
-        input_ids = input_ids.to(device)
-        lengths   = lengths.to(device)
-        labels    = labels.to(device)
-        logits = model(input_ids, lengths)
-        loss = criterion(logits, labels)
-        bs = labels.size(0)
-        total_loss += loss.item() * bs
-        total_acc  += binary_accuracy_from_logits(logits, labels) * bs
-        n += bs
-    return total_loss / n, total_acc / n
-
 
 
 def fit(
@@ -140,9 +61,11 @@ def fit(
     device=None,
     use_amp=True,
     scheduler_type="cosine",
-    optimizer="SGD",
-    patience=10,          # 조기 중단: 성능 향상을 기다리는 최대 epoch 수
-    min_delta=1e-4        # 성능 향상으로 인정할 최소 개선 폭
+    optimizer_type="SGD",
+    loss_type="CE",
+    use_early_stopping=True,
+    patience=10,          
+    min_delta=1e-4
 ):
     """
     동일한 학습 조건으로 모델을 학습/평가합니다.
@@ -154,26 +77,14 @@ def fit(
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
 
-    criterion = nn.CrossEntropyLoss()
+    # 손실함수 선택
+    criterion = build_loss(loss_type)
+    
     # 옵티마이저 선택
-    if optimizer == 'Adam':
-        optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    elif optimizer == 'SGD':
-        optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
-    elif optimizer == 'AdamW':
-        optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+    optimizer = build_optimizer(model, lr, weight_decay, momentum, optimizer_type)
 
     # 스케줄 선택
-    if scheduler_type == "cosine":
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
-    elif scheduler_type == "multistep":
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(
-            optimizer,
-            milestones=[int(epochs*0.5), int(epochs*0.75)],
-            gamma=0.1
-        )
-    else:
-        scheduler = None
+    scheduler = build_scheduler(optimizer, scheduler_type, epochs)
 
     scaler = torch.cuda.amp.GradScaler() if (use_amp and device.startswith("cuda")) else None
 
@@ -209,7 +120,7 @@ def fit(
             patience_counter += 1
 
         # 조기 중단 조건 만족 시 종료
-        if patience_counter >= patience:
+        if use_early_stopping and patience_counter >= patience:
             print(f"Early stopping at epoch {epoch} (no improvement in {patience} epochs)")
             print(f"Best accuracy: {best_acc:.4f} at epoch {best_epoch}")
             break
@@ -223,76 +134,134 @@ def fit(
         history["test_acc"].append(test_acc)
         history["lr"].append(current_lr)
         history["time"].append(elapsed_time)
-
-        print(f"[{epoch:03d}/{epochs}] "
-              f"train_loss={train_loss:.4f} acc={train_acc:.4f} | "
-              f"test_loss={test_loss:.4f} acc={test_acc:.4f} | "
-              f"lr={current_lr:.5f} | time={elapsed_time:.2f}s | "
-              f"patience: {patience_counter}/{patience}")
+        
+        if use_early_stopping:
+            print(f"[{epoch:03d}/{epochs}] "
+                f"train_loss={train_loss:.4f} acc={train_acc:.4f} | "
+                f"test_loss={test_loss:.4f} acc={test_acc:.4f} | "
+                f"lr={current_lr:.5f} | time={elapsed_time:.2f}s | "
+                f"patience: {patience_counter}/{patience}")
+        else:
+            print(f"[{epoch:03d}/{epochs}] "
+                f"train_loss={train_loss:.4f} acc={train_acc:.4f} | "
+                f"test_loss={test_loss:.4f} acc={test_acc:.4f} | "
+                f"lr={current_lr:.5f} | time={elapsed_time:.2f}s ")
+    
     print(f"Training completed. Final best accuracy: {best_acc:.4f}")
     return history, best_state
 
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='sentiment analysis Training')
+    parser.add_argument('--model', default='lstm_classification', type=str,
+                        help='model name')
+    parser.add_argument('--data_dir', default='./data', type=str,
+                        help='path to data')
+    parser.add_argument('--dataset', default='imdb', type=str,
+                        help='dataset name')
+    parser.add_argument('--batch_size', default=128, type=int,
+                        help='batch size')
+    parser.add_argument('--epochs', default=20, type=int,
+                        help='number of epochs')
+    parser.add_argument('--learning_rate', default=0.001, type=float,
+                        help='learning rate')
+    parser.add_argument('--weight_decay', default=5e-4, type=float,
+                        help='weight decay')
+    parser.add_argument('--momentum', default=0.9, type=float,
+                        help='momentum')
+    parser.add_argument('--seed', default=42, type=int,
+                        help='random seed')
+    parser.add_argument('--scheduler', default='cosine', type=str,
+                        help='learning rate scheduler')
+    parser.add_argument('--optimizer', default='AdamW', type=str,
+                        help='optimizer')
+    parser.add_argument('--loss', default='CE', type=str,
+                        help='loss function')
+    parser.add_argument('--use_early_stopping', action='store_true',
+                        help='use early stopping')
+    parser.add_argument('--patience', default=20, type=int,
+                        help='patience for early stopping')
+    parser.add_argument('--num_workers', default=4, type=int,
+                        help='number of workers for data loading')
+    parser.add_argument('--use_amp', action='store_true',
+                        help='use mixed precision training')
+    parser.add_argument('--ckpt_dir', default='./', type=str,
+                        help='directory to checkpoint')
+    parser.add_argument('--num_classes', default=2, type=int,
+                        help='number of classes')
+    parser.add_argument('--embed_dim', default=300, type=int,
+                        help='embedding dimension')
+    parser.add_argument('--hidden_dim', default=256, type=int,
+                        help='hidden dimension')
+    parser.add_argument('--num_layers', default=2, type=int,
+                        help='number of layers')
+    parser.add_argument('--bidirectional', action='store_true',
+                        help='use bidirectional LSTM')
+    parser.add_argument('--dropout', default=0.3, type=float,
+                        help='dropout rate')
+    parser.add_argument('--max_len', default=400, type=int,
+                        help='maximum sequence length')
+    args = parser.parse_args()
 
-def run_experiment(
-    model_builder,
-    model_name: str,
-    epochs=20,
-    batch_size=128,
-    lr=0.001,
-    weight_decay=5e-4,
-    momentum=0.9,
-    scheduler_type="cosine",
-    optimizer_type="AdamW",
-    seed=42,
-    num_workers=4,
-    max_len=400,
-    patience=20,
-):
-    """
-    동일한 설정으로 모델을 학습/평가하고 결과를 반환.
-    """
-    set_seed(seed)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"Device: {device}")
+    model_name = args.model
+    data_dir = args.data_dir
+    dataset = args.dataset
+    batch_size = args.batch_size
+    epochs = args.epochs
+    lr = args.learning_rate
+    weight_decay = args.weight_decay
+    momentum = args.momentum
+    seed = args.seed
+    scheduler_type = args.scheduler
+    optimizer_type = args.optimizer
+    loss_type = args.loss
+    use_early_stopping = args.use_early_stopping
+    patience = args.patience
+    num_workers = args.num_workers
+    use_amp = args.use_amp
+    ckpt_dir = args.ckpt_dir
+    num_classes = args.num_classes
+    embed_dim = args.embed_dim
+    hidden_dim = args.hidden_dim
+    num_layers = args.num_layers
+    bidirectional = args.bidirectional
+    dropout = args.dropout
+    max_len = args.max_len
 
     tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
     vocab = tokenizer.get_vocab()
     pad_idx = vocab["[PAD]"]
-    
-    ds = load_dataset("imdb")
-    train_texts = [clean_text(t) for t in ds["train"]['text']]
-    test_texts  = [clean_text(t) for t in ds["test"]['text']]
 
-    train_loader, test_loader = make_dataloaders(
-        tokenizer=tokenizer,
-        train_texts=train_texts,
-        test_texts=test_texts,
-        train_labels=ds["train"]['label'],
-        test_labels=ds["test"]['label'],
-        batch_size=batch_size,
-        num_workers=num_workers,
-        max_len=max_len,
-    )
+    set_seed(seed)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Device: {device}")
 
-    model = model_builder(
-        vocab_size=len(vocab),
-        embed_dim=300,
-        hidden_dim=256,
-        num_layers=2,
-        bidirectional=True,
-        dropout=0.3,
-        pad_idx=pad_idx,
-    )
+    if dataset == 'imdb':
+        train_loader, valid_loader = get_imdb_train_dataloader(
+            data_path=data_dir,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            valid_ratio=0.1,
+            max_len=max_len
+        )
     
-    
+    if model_name == 'lstm_classification':
+        model = LSTM_Classification(
+            vocab_size=len(vocab),
+            embed_dim=embed_dim,
+            hidden_dim=hidden_dim,
+            num_layers=num_layers,
+            bidirectional=bidirectional,
+            dropout=dropout,
+            pad_idx=pad_idx
+        )
+
     total_params = sum(p.numel() for p in model.parameters())
     print(f"{model_name} Total parameters: {total_params/1000000}M")
-
 
     history, best_state = fit(
         model=model,
         train_loader=train_loader,
-        test_loader=test_loader,
+        test_loader=valid_loader,
         epochs=epochs,
         lr=lr,
         weight_decay=weight_decay,
@@ -304,18 +273,8 @@ def run_experiment(
         patience=patience,
     )
 
-    # best checkpoint 저장(선택)
-    ckpt_path = f"./{model_name}_imdb_best.pth"
+    os.makedirs(ckpt_dir, exist_ok=True)
+    ckpt_path = os.path.join(ckpt_dir, f"{model_name}_best.pth")
+
     torch.save({"model": best_state, "meta": {"model_name": model_name}}, ckpt_path)
     print(f"Saved best checkpoint to: {ckpt_path}")
-    return history, best_state
-
-
-def build_lstm_classfication(vocab_size, 
-                             embed_dim, 
-                             hidden_dim, 
-                             num_layers, 
-                             bidirectional, 
-                             dropout, 
-                             pad_idx):
-    return LSTMClassifier(vocab_size, embed_dim, hidden_dim, num_layers, bidirectional, dropout, pad_idx)
