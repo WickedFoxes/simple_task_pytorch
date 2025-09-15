@@ -237,6 +237,7 @@ if __name__ == '__main__':
 
     if dataset == 'imdb':
         train_loader, valid_loader = get_imdb_train_dataloader(
+            tokenizer,
             data_path=data_dir,
             batch_size=batch_size,
             num_workers=num_workers,

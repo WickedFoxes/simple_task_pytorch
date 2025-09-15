@@ -72,6 +72,7 @@ if __name__ == '__main__':
 
     if dataset == 'imdb':
         test_loader = get_imdb_test_dataloader(
+            tokenizer,
             data_path=data_dir,
             batch_size=batch_size,
             num_workers=num_workers,
@@ -102,7 +103,7 @@ if __name__ == '__main__':
     running_loss, running_acc, n = 0.0, 0.0, 0
     
     with torch.no_grad():
-        for input_ids, lengths, labels in loader:
+        for input_ids, lengths, labels in test_loader:
             input_ids = input_ids.to(device)
             lengths   = lengths.to(device)
             targets    = labels.to(device)
