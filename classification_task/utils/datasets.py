@@ -24,7 +24,7 @@ def build_train_dataloader(
     ):
     if dataset == 'cifar10':
         train_loader, valid_loader = get_cifar10_train_dataloader(
-            data_path=data_dir,
+            data_dir=data_dir,
             batch_size=batch_size,
             num_workers=num_workers,
             img_size=img_size,
@@ -32,7 +32,7 @@ def build_train_dataloader(
         )
     elif dataset == 'cifar10_randaug':
         train_loader, valid_loader = get_cifar10_randaug_train_dataloader(
-            data_path=data_dir,
+            data_dir=data_dir,
             batch_size=batch_size,
             num_workers=num_workers,
             img_size=img_size,
@@ -40,7 +40,7 @@ def build_train_dataloader(
         )
     elif dataset == 'cifar10_mixup':
         train_loader, valid_loader = get_cifar10_mixup_train_dataloader(
-            data_path=data_dir,
+            data_dir=data_dir,
             batch_size=batch_size,
             num_workers=num_workers,
             img_size=img_size,
