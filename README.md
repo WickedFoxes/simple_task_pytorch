@@ -1,6 +1,7 @@
 https://colab.research.google.com/drive/1iTZfNal6bX7UiFny5M1Ttpgi7JiPToFz?usp=sharing
 
 # classification
+## train.py
       python train.py \
       --model resnet \
       --data_dir ./data \
@@ -17,8 +18,20 @@ https://colab.research.google.com/drive/1iTZfNal6bX7UiFny5M1Ttpgi7JiPToFz?usp=sh
       --loss CE \
       --use_early_stopping \
       --patience 20 \
-      --img_size 224 \
+      --img_size 32 \
       --num_workers 4 \
       --use_amp \
       --ckpt_dir ./checkpoints \
       --num_classes 10
+## test.py
+      python test.py \
+      --model resnet \
+      --dataset cifar10 \
+      --data_dir ./data \
+      --batch_size 128 \
+      --seed 42 \
+      --num_workers 4 \
+      --chk_path ./checkpoints/resnet_best.pth \
+      --img_size 32 \
+      --num_classes 10 \
+      --loss CE
