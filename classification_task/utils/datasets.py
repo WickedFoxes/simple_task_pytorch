@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, random_split, Subset
 
 
 import torchvision.datasets as datasets
@@ -96,19 +96,20 @@ def get_cifar10_train_dataloader(
     n_total = len(full_train_set)
     n_valid = int(n_total * valid_ratio)
     n_train = n_total - n_valid
-    train_set, valid_set = random_split(full_train_set, [n_train, n_valid])
+    train_subset, valid_subset = random_split(full_train_set, [n_train, n_valid])
 
-    # valid transform 교체
-    valid_set.dataset.transform = common_tf
+    # 서로 다른 Dataset 인스턴스 생성
+    train_base = datasets.CIFAR10(root=data_dir, train=True, download=False, transform=train_tf)
+    valid_base = datasets.CIFAR10(root=data_dir, train=True, download=False, transform=common_tf)
 
-    train_loader = DataLoader(
-        train_set, batch_size=batch_size, shuffle=True,
-        num_workers=num_workers, pin_memory=True, drop_last=True
-    )
-    valid_loader = DataLoader(
-        valid_set, batch_size=batch_size, shuffle=False,
-        num_workers=num_workers, pin_memory=True, drop_last=False
-    )
+    # 동일한 인덱스로 Subset 구성
+    train_set = Subset(train_base, train_subset.indices)
+    valid_set = Subset(valid_base, valid_subset.indices)
+
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True,
+                            num_workers=num_workers, pin_memory=True, drop_last=True)
+    valid_loader = DataLoader(valid_set, batch_size=batch_size, shuffle=False,
+                            num_workers=num_workers, pin_memory=True, drop_last=False)
 
     return train_loader, valid_loader
 
@@ -116,7 +117,8 @@ def get_cifar10_test_dataloader(
         data_dir="./data",
         batch_size=128,
         num_workers=4,
-        img_size=32):
+        img_size=32
+    ):
     transform_test = transforms.Compose([
         transforms.Resize((img_size, img_size), antialias=True),
         transforms.ToTensor(),
@@ -165,7 +167,6 @@ def get_cifar10_randaug_train_dataloader(
         transforms.Normalize(cifar10_mean, cifar10_std),
     ])
 
-    
     full_train_set = datasets.CIFAR10(
         root=data_dir,
         train=True,
@@ -176,19 +177,20 @@ def get_cifar10_randaug_train_dataloader(
     n_total = len(full_train_set)
     n_valid = int(n_total * valid_ratio)
     n_train = n_total - n_valid
-    train_set, valid_set = random_split(full_train_set, [n_train, n_valid])
+    train_subset, valid_subset = random_split(full_train_set, [n_train, n_valid])
 
-    # valid transform 교체
-    valid_set.dataset.transform = common_tf
+    # 서로 다른 Dataset 인스턴스 생성
+    train_base = datasets.CIFAR10(root=data_dir, train=True, download=False, transform=train_tf)
+    valid_base = datasets.CIFAR10(root=data_dir, train=True, download=False, transform=common_tf)
 
-    train_loader = DataLoader(
-        train_set, batch_size=batch_size, shuffle=True,
-        num_workers=num_workers, pin_memory=True, drop_last=True
-    )
-    valid_loader = DataLoader(
-        valid_set, batch_size=batch_size, shuffle=False,
-        num_workers=num_workers, pin_memory=True, drop_last=False
-    )
+    # 동일한 인덱스로 Subset 구성
+    train_set = Subset(train_base, train_subset.indices)
+    valid_set = Subset(valid_base, valid_subset.indices)
+
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True,
+                            num_workers=num_workers, pin_memory=True, drop_last=True)
+    valid_loader = DataLoader(valid_set, batch_size=batch_size, shuffle=False,
+                            num_workers=num_workers, pin_memory=True, drop_last=False)
 
     return train_loader, valid_loader
 
@@ -224,10 +226,15 @@ def get_cifar10_mixup_train_dataloader(
     n_total = len(full_train_set)
     n_valid = int(n_total * valid_ratio)
     n_train = n_total - n_valid
-    train_set, valid_set = random_split(full_train_set, [n_train, n_valid])
+    train_subset, valid_subset = random_split(full_train_set, [n_train, n_valid])
 
-    # valid transform 교체
-    valid_set.dataset.transform = common_tf
+    # 서로 다른 Dataset 인스턴스 생성
+    train_base = datasets.CIFAR10(root=data_dir, train=True, download=False, transform=train_tf)
+    valid_base = datasets.CIFAR10(root=data_dir, train=True, download=False, transform=common_tf)
+
+    # 동일한 인덱스로 Subset 구성
+    train_set = Subset(train_base, train_subset.indices)
+    valid_set = Subset(valid_base, valid_subset.indices)
     
     def mixup_collate_fn(batch, alpha=1.0, num_classes=10):
         """Mixup이 적용된 Collate function"""
