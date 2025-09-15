@@ -9,7 +9,7 @@ from utils.util import set_seed
 from utils.optimizer import build_optimizer
 from utils.evaluate import evaluate, accuracy
 from utils.loss import build_loss
-from utils.datasets import get_cifar10_train_dataloader
+from utils.datasets import build_train_dataloader
 
 
 def train_one_epoch(model, loader, optimizer, scaler, device, criterion):
@@ -154,8 +154,6 @@ if __name__ == '__main__':
                         help='momentum')
     parser.add_argument('--seed', default=42, type=int,
                         help='random seed')
-    parser.add_argument('--use_aug', action='store_true',
-                        help='use data augmentation')
     parser.add_argument('--scheduler', default='cosine', type=str,
                         help='learning rate scheduler')
     parser.add_argument('--optimizer', default='SGD', type=str,
@@ -187,7 +185,6 @@ if __name__ == '__main__':
     weight_decay = args.weight_decay
     momentum = args.momentum
     seed = args.seed
-    use_aug = args.use_aug
     scheduler_type = args.scheduler
     optimizer_type = args.optimizer
     loss_type = args.loss
@@ -203,15 +200,14 @@ if __name__ == '__main__':
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Device: {device}")
 
-    if dataset == 'cifar10':
-        train_loader, valid_loader = get_cifar10_train_dataloader(
-            data_path=data_dir,
-            batch_size=batch_size,
-            num_workers=num_workers,
-            use_aug=use_aug,
-            img_size=img_size,
-            valid_ratio=0.1
-        )
+    train_loader, valid_loader = build_train_dataloader(
+        dataset=dataset,
+        data_dir=data_dir,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        img_size=img_size,
+        valid_ratio=0.1
+    )
 
     if model_name == 'resnet':
         model = ResNet_mini(num_classes=num_classes)

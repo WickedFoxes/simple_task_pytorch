@@ -4,7 +4,7 @@ import argparse
 import torch
 
 from models import CustomNet, ResNet_mini
-from utils.datasets import get_cifar10_test_dataloader
+from utils.datasets import build_test_dataloader
 from utils.evaluate import accuracy
 from utils.loss import build_loss
 from utils.util import set_seed
@@ -49,14 +49,14 @@ if __name__ == '__main__':
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Device: {device}")
 
-    if dataset == 'cifar10':
-        test_loader = get_cifar10_test_dataloader(
-            data_path=data_dir,
-            batch_size=batch_size,
-            num_workers=num_workers,
-            img_size=img_size,
-        )
-
+    test_loader =build_test_dataloader(
+        dataset=dataset,
+        data_dir=data_dir,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        img_size=img_size,
+    )
+    
     if model_name == 'resnet':
         model = ResNet_mini(num_classes=num_classes)
     elif model_name == 'custom':

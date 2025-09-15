@@ -1,41 +1,93 @@
 import os
 
+import numpy as np
+
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import DataLoader, random_split
+
 
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 
 cifar10_mean = [0.4914, 0.4822, 0.4465]
 cifar10_std  = [0.2471, 0.2435, 0.261]
-                
-def get_cifar10_train_dataloader(
-        data_path="./data",
+
+def build_train_dataloader(
+        dataset='cifar10',
+        data_dir="./data",
         batch_size=128,
         num_workers=4,
-        use_aug=True,
         img_size=32,
-        valid_ratio=0.1):
+        valid_ratio=0.1,
+    ):
+    if dataset == 'cifar10':
+        train_loader, valid_loader = get_cifar10_train_dataloader(
+            data_path=data_dir,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            img_size=img_size,
+            valid_ratio=valid_ratio
+        )
+    elif dataset == 'cifar10_randaug':
+        train_loader, valid_loader = get_cifar10_randaug_train_dataloader(
+            data_path=data_dir,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            img_size=img_size,
+            valid_ratio=valid_ratio
+        )
+    elif dataset == 'cifar10_mixup':
+        train_loader, valid_loader = get_cifar10_mixup_train_dataloader(
+            data_path=data_dir,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            img_size=img_size,
+            valid_ratio=valid_ratio,
+            mixup_alpha=1.0
+        )
+    return train_loader, valid_loader
+
+def build_test_dataloader(
+        dataset='cifar10',
+        data_dir="./data",
+        batch_size=128,
+        num_workers=4,
+        img_size=32,
+    ):
+    if dataset == 'cifar10':
+        test_loader = get_cifar10_test_dataloader(
+            data_dir=data_dir,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            img_size=img_size
+        )
+    return test_loader
+
+def get_cifar10_train_dataloader(
+        data_dir="./data",
+        batch_size=128,
+        num_workers=4,
+        img_size=32,
+        valid_ratio=0.1,
+    ):
     common_tf = transforms.Compose([
         transforms.Resize((img_size, img_size), antialias=True),
         transforms.ToTensor(),
         transforms.Normalize(cifar10_mean, cifar10_std),
     ])
 
-    if use_aug:
-        train_tf = transforms.Compose([
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.Resize((img_size, img_size), antialias=True),
-            transforms.ToTensor(),
-            transforms.Normalize(cifar10_mean, cifar10_std),
-        ])
-    else:
-        train_tf = common_tf
+    train_tf = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.Resize((img_size, img_size), antialias=True),
+        transforms.ToTensor(),
+        transforms.Normalize(cifar10_mean, cifar10_std),
+    ])
 
     full_train_set = datasets.CIFAR10(
-        root=data_path,
+        root=data_dir,
         train=True,
         download=True,
         transform=train_tf
@@ -60,10 +112,8 @@ def get_cifar10_train_dataloader(
 
     return train_loader, valid_loader
 
-
-
 def get_cifar10_test_dataloader(
-        data_path="./data",
+        data_dir="./data",
         batch_size=128,
         num_workers=4,
         img_size=32):
@@ -73,7 +123,7 @@ def get_cifar10_test_dataloader(
         transforms.Normalize(cifar10_mean, cifar10_std),
     ])
     test_set = datasets.CIFAR10(
-        root=data_path,
+        root=data_dir,
         train=False,
         download=True,
         transform=transform_test
@@ -84,3 +134,138 @@ def get_cifar10_test_dataloader(
     )
 
     return test_loader
+
+def get_cifar10_randaug_train_dataloader(
+        data_dir="./data",
+        batch_size=128,
+        num_workers=4,
+        ra_num_ops=2,                 # RandAugment: 연산 개수(N)
+        ra_magnitude=9,               # RandAugment: 강도(M, 0~10 권장)
+        img_size=32,
+        valid_ratio=0.1,                 
+    ):
+    """
+    Returns:
+        train_loader, valid_loader
+    """
+
+    # 공통(검증/테스트) 변환: 텐서화/정규화만 포함
+    common_tf = transforms.Compose([
+        transforms.Resize((img_size, img_size), antialias=True),
+        transforms.ToTensor(),
+        transforms.Normalize(cifar10_mean, cifar10_std),
+    ])
+
+    train_tf = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandAugment(num_ops=ra_num_ops, magnitude=ra_magnitude),
+        transforms.Resize((img_size, img_size), antialias=True),
+        transforms.ToTensor(),
+        transforms.Normalize(cifar10_mean, cifar10_std),
+    ])
+
+    
+    full_train_set = datasets.CIFAR10(
+        root=data_dir,
+        train=True,
+        download=True,
+        transform=train_tf
+    )
+
+    n_total = len(full_train_set)
+    n_valid = int(n_total * valid_ratio)
+    n_train = n_total - n_valid
+    train_set, valid_set = random_split(full_train_set, [n_train, n_valid])
+
+    # valid transform 교체
+    valid_set.dataset.transform = common_tf
+
+    train_loader = DataLoader(
+        train_set, batch_size=batch_size, shuffle=True,
+        num_workers=num_workers, pin_memory=True, drop_last=True
+    )
+    valid_loader = DataLoader(
+        valid_set, batch_size=batch_size, shuffle=False,
+        num_workers=num_workers, pin_memory=True, drop_last=False
+    )
+
+    return train_loader, valid_loader
+
+def get_cifar10_mixup_train_dataloader(
+        data_dir="./data",
+        batch_size=128,
+        num_workers=4,
+        img_size=32,
+        valid_ratio=0.1,
+        mixup_alpha=1.0,
+    ):
+    common_tf = transforms.Compose([
+        transforms.Resize((img_size, img_size), antialias=True),
+        transforms.ToTensor(),
+        transforms.Normalize(cifar10_mean, cifar10_std),
+    ])
+
+    train_tf = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.Resize((img_size, img_size), antialias=True),
+        transforms.ToTensor(),
+        transforms.Normalize(cifar10_mean, cifar10_std),
+    ])
+
+    full_train_set = datasets.CIFAR10(
+        root=data_dir,
+        train=True,
+        download=True,
+        transform=train_tf
+    )
+
+    n_total = len(full_train_set)
+    n_valid = int(n_total * valid_ratio)
+    n_train = n_total - n_valid
+    train_set, valid_set = random_split(full_train_set, [n_train, n_valid])
+
+    # valid transform 교체
+    valid_set.dataset.transform = common_tf
+    
+    def mixup_collate_fn(batch, alpha=1.0, num_classes=10):
+        """Mixup이 적용된 Collate function"""
+        images, targets = zip(*batch)
+        images = torch.stack(images)
+        targets = torch.tensor(targets)
+
+        if alpha > 0:
+            lam = np.random.beta(alpha, alpha)
+        else:
+            lam = 1.0
+
+        batch_size = images.size(0)
+        index = torch.randperm(batch_size)
+
+        mixed_images = lam * images + (1 - lam) * images[index, :]
+        targets_onehot = F.one_hot(targets, num_classes=num_classes).float()
+        mixed_targets = lam * targets_onehot + (1 - lam) * targets_onehot[index, :]
+
+        return mixed_images, mixed_targets
+
+    train_loader = DataLoader(
+        train_set,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+        pin_memory=True,
+        drop_last=True,
+        collate_fn=lambda b: mixup_collate_fn(b, alpha=mixup_alpha)  # Mixup 적용
+    )
+
+    valid_loader = DataLoader(
+        valid_set,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=True,
+        drop_last=False
+    )
+
+    return train_loader, valid_loader
