@@ -294,11 +294,20 @@ class ResNet_mini_v2(nn.Module):
         self.inplanes = 16 #input shape
         self.norm_layer = nn.BatchNorm2d
         self.init_conv = conv3x3(3, self.inplanes, 1)
-        self.layer1 = self._make_layer(block, 16*k, layers[0], dropout=dropout)
-        self.layer2 = self._make_layer(block, 32*k, layers[1], dropout=dropout)
-        self.layer3 = self._make_layer(block, 64*k, layers[2], dropout=dropout)
+        self.layer1 = self._make_layer(block=block, 
+                                       planes=16*k, 
+                                       blocks=layers[0], 
+                                       dropout=dropout)
+        self.layer2 = self._make_layer(block=block, 
+                                       planes=32*k, 
+                                       blocks=layers[1], 
+                                       dropout=dropout)
+        self.layer3 = self._make_layer(block=block, 
+                                       planes=64*k, 
+                                       blocks=layers[2], 
+                                       dropout=dropout)
         self.avgpool = nn.AdaptiveAvgPool2d((1,1))
-        self.fc = nn.Linear(256, num_classes)
+        self.fc = nn.Linear(64*k, num_classes)
 
     def _make_layer(self, block:Type[Union[BasicBlock_v2, Bottleneck_v2]],
                    planes:int, blocks:int, stride: int=1, dilate:bool=False, dropout:bool=False)->nn.Sequential:
