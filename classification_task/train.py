@@ -3,7 +3,7 @@ import time
 import argparse
 import torch
 
-from models import CustomNet, ResNet_mini
+from models import CustomNet, ResNet_mini, ResNet_mini_v2, BasicBlock_v2, Bottleneck_v2
 from utils.scheduler import build_scheduler
 from utils.util import set_seed
 from utils.optimizer import build_optimizer
@@ -209,11 +209,23 @@ if __name__ == '__main__':
         valid_ratio=0.1
     )
 
-    if model_name == 'resnet':
+    if model_name == 'resnet_mini':
         model = ResNet_mini(num_classes=num_classes)
     elif model_name == 'custom':
         model = CustomNet(num_classes=num_classes)
-    
+    elif model_name == 'resnet_mini_v2':
+        model = ResNet_mini_v2(num_classes=num_classes,
+                               type = BasicBlock_v2, 
+                               layers = [3,4,6],
+                               dropout = False,
+                               k = 4)
+    elif model_name == 'wide_resnet_mini_v2':
+        model = ResNet_mini_v2(num_classes=num_classes,
+                               type = BasicBlock_v2, 
+                               layers = [2,2,2],
+                               dropout = True,
+                               k = 8)
+
     total_params = sum(p.numel() for p in model.parameters())
     print(f"{model_name} Total parameters: {total_params/1000000}M")
 

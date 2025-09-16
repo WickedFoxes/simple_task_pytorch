@@ -246,26 +246,6 @@ def get_cifar10_mixup_train_dataloader(
     # 동일한 인덱스로 Subset 구성
     train_set = Subset(train_base, train_subset.indices)
     valid_set = Subset(valid_base, valid_subset.indices)
-    
-    def mixup_collate_fn(batch, alpha=1.0, num_classes=10):
-        """Mixup이 적용된 Collate function"""
-        images, targets = zip(*batch)
-        images = torch.stack(images)
-        targets = torch.tensor(targets)
-
-        if alpha > 0:
-            lam = np.random.beta(alpha, alpha)
-        else:
-            lam = 1.0
-
-        batch_size = images.size(0)
-        index = torch.randperm(batch_size)
-
-        mixed_images = lam * images + (1 - lam) * images[index, :]
-        targets_onehot = F.one_hot(targets, num_classes=num_classes).float()
-        mixed_targets = lam * targets_onehot + (1 - lam) * targets_onehot[index, :]
-
-        return mixed_images, mixed_targets
 
     train_loader = DataLoader(
         train_set,
@@ -329,54 +309,6 @@ def get_cifar10_cutmix_train_dataloader(
     train_set = Subset(train_base, train_subset.indices)
     valid_set = Subset(valid_base, valid_subset.indices)
 
-    def _rand_bbox(W, H, lam):
-        """CutMix bbox 생성 (W: width, H: height)"""
-        cut_rat = np.sqrt(1. - lam)
-        cut_w = int(W * cut_rat)
-        cut_h = int(H * cut_rat)
-
-        # Uniform center
-        cx = np.random.randint(W)
-        cy = np.random.randint(H)
-
-        x1 = np.clip(cx - cut_w // 2, 0, W)
-        y1 = np.clip(cy - cut_h // 2, 0, H)
-        x2 = np.clip(cx + cut_w // 2, 0, W)
-        y2 = np.clip(cy + cut_h // 2, 0, H)
-        return x1, y1, x2, y2
-
-    def cutmix_collate_fn(batch, alpha=1.0, num_classes=10):
-        """CutMix 적용 Collate function"""
-        images, targets = zip(*batch)
-        images = torch.stack(images)           # [B, C, H, W]
-        targets = torch.tensor(targets)        # [B]
-
-        if alpha > 0:
-            lam = np.random.beta(alpha, alpha)
-        else:
-            lam = 1.0  # 비활성화
-
-        B, C, H, W = images.size()
-        index = torch.randperm(B)
-
-        shuffled_images = images[index]
-        shuffled_targets = targets[index]
-
-        if lam < 1.0:
-            x1, y1, x2, y2 = _rand_bbox(W, H, lam)
-            # 영역 교체
-            images[:, :, y1:y2, x1:x2] = shuffled_images[:, :, y1:y2, x1:x2]
-            # 실제 잘린 면적 기반 λ 재계산(보정)
-            box_area = (x2 - x1) * (y2 - y1)
-            lam = 1.0 - box_area / float(W * H)
-
-        # one-hot 라벨과 라벨 혼합
-        targets_onehot = F.one_hot(targets, num_classes=num_classes).float()
-        shuffled_onehot = F.one_hot(shuffled_targets, num_classes=num_classes).float()
-        mixed_targets = lam * targets_onehot + (1.0 - lam) * shuffled_onehot
-
-        return images, mixed_targets
-
     train_loader = DataLoader(
         train_set,
         batch_size=batch_size,
@@ -397,3 +329,71 @@ def get_cifar10_cutmix_train_dataloader(
     )
 
     return train_loader, valid_loader
+
+
+def _rand_bbox(W, H, lam):
+    """CutMix bbox 생성 (W: width, H: height)"""
+    cut_rat = np.sqrt(1. - lam)
+    cut_w = int(W * cut_rat)
+    cut_h = int(H * cut_rat)
+
+    # Uniform center
+    cx = np.random.randint(W)
+    cy = np.random.randint(H)
+
+    x1 = np.clip(cx - cut_w // 2, 0, W)
+    y1 = np.clip(cy - cut_h // 2, 0, H)
+    x2 = np.clip(cx + cut_w // 2, 0, W)
+    y2 = np.clip(cy + cut_h // 2, 0, H)
+    return x1, y1, x2, y2
+
+def cutmix_collate_fn(batch, alpha=1.0, num_classes=10):
+    """CutMix 적용 Collate function"""
+    images, targets = zip(*batch)
+    images = torch.stack(images)
+    targets = torch.tensor(targets)
+
+    return cutmix(images, targets, alpha, num_classes=num_classes)
+
+def mixup_collate_fn(batch, alpha=1.0, num_classes=10):
+    """Mixup이 적용된 Collate function"""
+    images, targets = zip(*batch)
+    images = torch.stack(images)
+    targets = torch.tensor(targets)
+
+    return mixup(images, targets, alpha, num_classes=num_classes)
+
+
+def cutmix(images, targets, alpha, num_classes=10):
+    lam = np.random.beta(alpha, alpha) if alpha > 0 else 1.0
+    B, C, H, W = images.size()
+    index = torch.randperm(B, device=images.device)
+
+    shuffled_images = images[index]
+    shuffled_targets = targets[index]
+
+    if lam < 1.0:
+        x1, y1, x2, y2 = _rand_bbox(W, H, lam)
+        images[:, :, y1:y2, x1:x2] = shuffled_images[:, :, y1:y2, x1:x2]
+        # 실제 잘린 면적 기반 λ 재계산(보정)
+        box_area = (x2 - x1) * (y2 - y1)
+        lam = 1.0 - box_area / float(W * H)
+
+    targets_onehot = F.one_hot(targets, num_classes=num_classes).float()
+    shuffled_onehot =F.one_hot(shuffled_targets, num_classes=num_classes).float()
+    mixed_targets = lam * targets_onehot + (1.0 - lam) * shuffled_onehot
+    return images, mixed_targets
+
+def mixup(images, targets, alpha, num_classes=10):
+    lam = np.random.beta(alpha, alpha) if alpha > 0 else 1.0
+    B = images.size(0)
+    index = torch.randperm(B, device=images.device)
+    shuffled_images = images[index]
+    shuffled_targets = targets[index]
+
+    mixed_images = lam * images + (1.0 - lam) * shuffled_images
+
+    targets_onehot = F.one_hot(targets, num_classes=num_classes).float()
+    shuffled_onehot =F.one_hot(shuffled_targets, num_classes=num_classes).float()
+    mixed_targets = lam * targets_onehot + (1.0 - lam) * shuffled_onehot
+    return mixed_images, mixed_targets
