@@ -312,11 +312,19 @@ class ResNet_mini_v2(nn.Module):
                 norm_layer(planes),
             )
         layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample, self.groups, self.dilation, norm_layer, self.dropout))
+        layers.append(block(inplanes=self.inplanes, 
+                            planes=planes, 
+                            stride=stride, 
+                            downsample=downsample, 
+                            norm_layer=norm_layer, 
+                            dropout=self.dropout))
         self.inplanes = planes
         for _ in range(1, blocks):
-            layers.append(block(self.inplanes, planes, groups=self.groups, dilation = self.dilation, 
-                               norm_layer = norm_layer))
+            layers.append(block(inplanes=self.inplanes, 
+                                planes=planes, 
+                                groups=self.groups, 
+                                norm_layer = norm_layer,
+                                dropout=self.dropout))
 
         return nn.Sequential(*layers)
 
@@ -395,7 +403,7 @@ class ResNet(nn.Module):
         layers.append(block(self.inplanes, planes, stride, downsample, self.groups, self.dilation, norm_layer))
         self.inplanes = planes
         for _ in range(1, blocks):
-            layers.append(block(self.inplanes, planes, groups=self.groups, dilation = self.dilation, 
+            layers.append(block(self.inplanes, planes, dilation = self.dilation, 
                                norm_layer = norm_layer))
 
         return nn.Sequential(*layers)
