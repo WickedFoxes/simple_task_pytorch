@@ -295,15 +295,18 @@ class ResNet_mini_v2(nn.Module):
         self.norm_layer = nn.BatchNorm2d
         self.init_conv = conv3x3(3, self.inplanes, 1)
         self.layer1 = self._make_layer(block=block, 
-                                       planes=16*k, 
+                                       planes=16*k,
+                                       stride=2, 
                                        blocks=layers[0], 
                                        dropout=dropout)
         self.layer2 = self._make_layer(block=block, 
                                        planes=32*k, 
+                                       stride=2,
                                        blocks=layers[1], 
                                        dropout=dropout)
         self.layer3 = self._make_layer(block=block, 
                                        planes=64*k, 
+                                       stride=2,
                                        blocks=layers[2], 
                                        dropout=dropout)
         self.avgpool = nn.AdaptiveAvgPool2d((1,1))
