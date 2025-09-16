@@ -226,6 +226,7 @@ if __name__ == '__main__':
                                dropout = True,
                                k = 8)
 
+    print(model)
     total_params = sum(p.numel() for p in model.parameters())
     print(f"{model_name} Total parameters: {total_params/1000000}M")
 
@@ -242,6 +243,8 @@ if __name__ == '__main__':
         scheduler_type=scheduler_type,
         optimizer_type=optimizer_type,
         patience=patience,
+        use_early_stopping=use_early_stopping,
+        loss_type=loss_type,
     )
 
     os.makedirs(ckpt_dir, exist_ok=True)
