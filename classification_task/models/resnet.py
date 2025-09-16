@@ -291,8 +291,9 @@ class ResNet_mini_v2(nn.Module):
     k :int = 4
     )-> None:
         super(ResNet_mini_v2, self).__init__()
+        self.inplanes = 16 #input shape
         self.norm_layer = nn.BatchNorm2d
-        self.init_conv = conv3x3(3, 16, 1)
+        self.init_conv = conv3x3(3, self.inplanes, 1)
         self.layer1 = self._make_layer(block, 16*k, layers[0])
         self.layer2 = self._make_layer(block, 32*k, layers[1])
         self.layer3 = self._make_layer(block, 64*k, layers[2])
@@ -320,6 +321,7 @@ class ResNet_mini_v2(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x:Tensor) -> Tensor:
+        x = self.init_conv(x)
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
