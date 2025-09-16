@@ -78,7 +78,7 @@ class BasicBlock_v2(nn.Module):
         stride: int = 1,
         downsample: Optional[nn.Module] = None,
         norm_layer: Optional[Callable[..., nn.Module]] = None,
-        dropout: bool = False,
+        dropout: float = 0.0,
     ) -> None:
         super().__init__()
         if norm_layer is None:
@@ -93,7 +93,7 @@ class BasicBlock_v2(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
-        self.dropout = dropout
+        self.dropout = nn.Dropout2d(dropout)
 
     def forward(self, x: Tensor) -> Tensor:
         identity = x
@@ -104,8 +104,7 @@ class BasicBlock_v2(nn.Module):
 
         out = self.bn2(out)
         out = self.relu(out)
-        if self.dropout:
-            out = nn.Dropout(out)
+        out = self.dropout(out)
         out = self.conv2(out)
 
         if self.downsample is not None:
@@ -219,7 +218,7 @@ class ResNet_mini_v2(nn.Module):
     self,
     layers:List[int],
     num_classes : int=10,
-    dropout: bool = False,
+    dropout: float = 0.0,
     k :int = 4
     )-> None:
         super().__init__()
@@ -251,7 +250,7 @@ class ResNet_mini_v2(nn.Module):
             in_planes:int, 
             out_planes:int, 
             stride: int=1,
-            dropout:bool=False
+            dropout:float=0.0
     ):
         norm_layer = self.norm_layer
         downsample = None
