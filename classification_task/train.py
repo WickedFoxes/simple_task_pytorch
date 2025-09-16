@@ -215,13 +215,11 @@ if __name__ == '__main__':
         model = CustomNet(num_classes=num_classes)
     elif model_name == 'resnet_mini_v2':
         model = ResNet_mini_v2(num_classes=num_classes,
-                               block = BasicBlock_v2, 
                                layers = [3,4,6],
                                dropout = False,
                                k = 4)
     elif model_name == 'wide_resnet_mini_v2':
         model = ResNet_mini_v2(num_classes=num_classes,
-                               block = BasicBlock_v2, 
                                layers = [2,2,2],
                                dropout = True,
                                k = 8)
