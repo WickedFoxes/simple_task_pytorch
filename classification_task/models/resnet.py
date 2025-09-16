@@ -320,8 +320,7 @@ class ResNet_mini_v2(nn.Module):
         self.inplanes = planes
         for _ in range(1, blocks):
             layers.append(block(inplanes=self.inplanes, 
-                                planes=planes, 
-                                groups=self.groups, 
+                                planes=planes,  
                                 norm_layer = norm_layer,
                                 dropout=dropout))
 
