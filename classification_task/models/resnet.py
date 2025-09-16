@@ -294,15 +294,14 @@ class ResNet_mini_v2(nn.Module):
         self.inplanes = 16 #input shape
         self.norm_layer = nn.BatchNorm2d
         self.init_conv = conv3x3(3, self.inplanes, 1)
-        self.layer1 = self._make_layer(block, 16*k, layers[0])
-        self.layer2 = self._make_layer(block, 32*k, layers[1])
-        self.layer3 = self._make_layer(block, 64*k, layers[2])
+        self.layer1 = self._make_layer(block, 16*k, layers[0], dropout=dropout)
+        self.layer2 = self._make_layer(block, 32*k, layers[1], dropout=dropout)
+        self.layer3 = self._make_layer(block, 64*k, layers[2], dropout=dropout)
         self.avgpool = nn.AdaptiveAvgPool2d((1,1))
         self.fc = nn.Linear(256, num_classes)
-        self.dropout = dropout
 
     def _make_layer(self, block:Type[Union[BasicBlock_v2, Bottleneck_v2]],
-                   planes:int, blocks:int, stride: int=1, dilate:bool=False)->nn.Sequential:
+                   planes:int, blocks:int, stride: int=1, dilate:bool=False, dropout:bool=False)->nn.Sequential:
         norm_layer = self.norm_layer
         downsample = None
         #downsampling 필요한 경우 downsample layer 생성
@@ -317,14 +316,14 @@ class ResNet_mini_v2(nn.Module):
                             stride=stride, 
                             downsample=downsample, 
                             norm_layer=norm_layer, 
-                            dropout=self.dropout))
+                            dropout=dropout))
         self.inplanes = planes
         for _ in range(1, blocks):
             layers.append(block(inplanes=self.inplanes, 
                                 planes=planes, 
                                 groups=self.groups, 
                                 norm_layer = norm_layer,
-                                dropout=self.dropout))
+                                dropout=dropout))
 
         return nn.Sequential(*layers)
 
