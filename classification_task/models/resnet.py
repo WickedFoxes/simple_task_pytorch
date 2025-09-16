@@ -302,7 +302,7 @@ class ResNet_mini_v2(nn.Module):
 
     def _make_layer(self, block:Type[Union[BasicBlock_v2, Bottleneck_v2]],
                    planes:int, blocks:int, stride: int=1, dilate:bool=False)->nn.Sequential:
-        norm_layer = self._norm_layer
+        norm_layer = self.norm_layer
         downsample = None
         #downsampling 필요한 경우 downsample layer 생성
         if stride !=1 or self.inplanes != planes:
