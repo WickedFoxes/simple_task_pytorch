@@ -226,7 +226,6 @@ if __name__ == '__main__':
                                dropout = True,
                                k = 8)
 
-    print(model)
     total_params = sum(p.numel() for p in model.parameters())
     print(f"{model_name} Total parameters: {total_params/1000000}M")
 
