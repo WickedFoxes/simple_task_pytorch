@@ -71,28 +71,18 @@ class BasicBlock(nn.Module):
         return out
 
 class BasicBlock_v2(nn.Module):
-    expansion: int = 1
-
     def __init__(
         self,
         inplanes: int,
         planes: int,
         stride: int = 1,
         downsample: Optional[nn.Module] = None,
-        groups: int = 1,
-        base_width: int = 64,
-        dilation: int = 1,
         norm_layer: Optional[Callable[..., nn.Module]] = None,
         dropout: bool = False,
     ) -> None:
         super().__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
-        if groups != 1 or base_width != 64:
-            raise ValueError("BasicBlock only supports groups=1 and base_width=64")
-        if dilation > 1:
-            raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
-        # Both self.conv1 and self.downsample layers downsample the input when stride != 1
         
         self.bn1 = norm_layer(inplanes)
         self.conv1 = conv3x3(inplanes, planes, stride)
@@ -183,63 +173,6 @@ class Bottleneck(nn.Module):
 
         return out
 
-class Bottleneck_v2(nn.Module):
-    def __init__(
-        self,
-        inplanes: int,
-        planes: int,
-        stride: int = 1,
-        downsample: Optional[nn.Module] = None,
-        groups: int = 1,
-        base_width: int = 64,
-        dilation: int = 1,
-        norm_layer: Optional[Callable[..., nn.Module]] = None,
-        dropout: bool = False,
-    ) -> None:
-        super().__init__()
-        if norm_layer is None:
-            norm_layer = nn.BatchNorm2d
-        width = int(planes * (base_width / 64.0)) * groups
-        
-        self.bn1 = norm_layer(inplanes)
-        self.conv1 = conv1x1(inplanes, width)
-        
-        self.bn2 = norm_layer(width)
-        self.conv2 = conv3x3(width, width, stride, groups, dilation)
-        
-        self.bn3 = norm_layer(width)
-        self.conv3 = conv1x1(width, planes * self.expansion)
-        
-        self.relu = nn.ReLU(inplace=True)
-        self.downsample = downsample
-        self.stride = stride
-        self.dropout = dropout
-
-    def forward(self, x: Tensor) -> Tensor:
-        identity = x
-
-        out = self.bn1(x)
-        out = self.relu(out)
-        out = self.conv1(out)
-
-        out = self.bn2(out)
-        out = self.relu(out)
-        out = self.conv2(out)
-        
-        out = self.bn3(out)
-        out = self.relu(out)
-        if self.dropout:
-            out = nn.Dropout(out)
-        out = self.conv3(out)
-
-        if self.downsample is not None:
-            identity = self.downsample(x)
-
-        out += identity
-        
-
-        return out
-
 
 class ResNet_mini(nn.Module):
     def __init__(
@@ -284,61 +217,66 @@ class ResNet_mini(nn.Module):
 class ResNet_mini_v2(nn.Module):
     def __init__(
     self,
-    block:Type[Union[BasicBlock_v2, Bottleneck_v2]],
     layers:List[int],
     num_classes : int=10,
     dropout: bool = False,
     k :int = 4
     )-> None:
-        super(ResNet_mini_v2, self).__init__()
+        super().__init__()
         self.inplanes = 16 #input shape
         self.norm_layer = nn.BatchNorm2d
+
         self.init_conv = conv3x3(3, self.inplanes, 1)
-        self.layer1 = self._make_layer(block=block, 
-                                       planes=16*k,
-                                       stride=2, 
-                                       blocks=layers[0], 
+        self.layer1 = self._make_layer(in_planes=self.inplanes,
+                                       out_planes=self.inplanes*k,
+                                       blocks=layers[0],
+                                       stride=1,
                                        dropout=dropout)
-        self.layer2 = self._make_layer(block=block, 
-                                       planes=32*k, 
+        self.layer2 = self._make_layer(in_planes=self.inplanes*k,
+                                       out_planes=self.inplanes*k*2,
                                        stride=2,
                                        blocks=layers[1], 
                                        dropout=dropout)
-        self.layer3 = self._make_layer(block=block, 
-                                       planes=64*k, 
+        self.layer3 = self._make_layer(in_planes=self.inplanes*k*2,
+                                       out_planes=self.inplanes*k*4,
                                        stride=2,
                                        blocks=layers[2], 
                                        dropout=dropout)
         self.avgpool = nn.AdaptiveAvgPool2d((1,1))
-        self.fc = nn.Linear(64*k, num_classes)
+        self.fc = nn.Linear(self.inplanes*k*4, num_classes)
 
-    def _make_layer(self, block:Type[Union[BasicBlock_v2, Bottleneck_v2]],
-                   planes:int, blocks:int, stride: int=1, dilate:bool=False, dropout:bool=False)->nn.Sequential:
+    def _make_layer(
+            self, 
+            blocks:int, 
+            in_planes:int, 
+            out_planes:int, 
+            stride: int=1,
+            dropout:bool=False
+    ):
         norm_layer = self.norm_layer
         downsample = None
         #downsampling 필요한 경우 downsample layer 생성
-        if stride !=1 or self.inplanes != planes:
+        if stride !=1 or in_planes != out_planes:
             downsample = nn.Sequential(
-                conv1x1(self.inplanes, planes, stride),
-                norm_layer(planes),
+                conv1x1(in_planes, out_planes, stride),
+                norm_layer(out_planes),
             )
         layers = []
-        layers.append(block(inplanes=self.inplanes, 
-                            planes=planes, 
+        layers.append(BasicBlock_v2(inplanes=in_planes, 
+                            planes=out_planes, 
                             stride=stride, 
                             downsample=downsample, 
                             norm_layer=norm_layer, 
                             dropout=dropout))
-        self.inplanes = planes
         for _ in range(1, blocks):
-            layers.append(block(inplanes=self.inplanes, 
-                                planes=planes,  
+            layers.append(BasicBlock_v2(inplanes=out_planes, 
+                                planes=out_planes,  
                                 norm_layer = norm_layer,
                                 dropout=dropout))
 
         return nn.Sequential(*layers)
 
-    def forward(self, x:Tensor) -> Tensor:
+    def forward(self, x):
         x = self.init_conv(x)
         x = self.layer1(x)
         x = self.layer2(x)
