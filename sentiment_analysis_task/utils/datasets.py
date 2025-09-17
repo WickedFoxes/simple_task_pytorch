@@ -9,6 +9,8 @@ from datasets import load_from_disk
 # 데이터 증강을 위한 nlpaug 라이브러리 임포트
 import nlpaug.flow as naf
 import nlpaug.augmenter.word as naw
+import nltk
+nltk.download('averaged_perceptron_tagger_eng')
 
 def build_train_dataloader(
     dataset_name,
