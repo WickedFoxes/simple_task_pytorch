@@ -1,4 +1,4 @@
-from .lstm_classfication import LSTMClassifier
+from .lstm_classfication import LSTMClassifier, LSTMClassifier_v2
 
 def build_model(model_name : str,
             vocab_size,
@@ -20,6 +20,18 @@ def build_model(model_name : str,
             bidirectional=bidirectional,
             dropout=dropout,
             pad_idx=pad_idx
+        )
+    elif model_name == 'lstm_classification_v2':
+        model = LSTMClassifier_v2(
+            vocab_size=vocab_size,
+            num_classes=num_classes,
+            embed_dim=embed_dim,
+            hidden_dim=hidden_dim,
+            num_layers=num_layers,
+            bidirectional=bidirectional,
+            dropout=dropout,
+            pad_idx=pad_idx,
+            dropconnect=0.3
         )
     return model
     
