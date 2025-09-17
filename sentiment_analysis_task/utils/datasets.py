@@ -165,7 +165,8 @@ def get_imdb_test_dataloader(
 
 class AugReviewDataset(Dataset):
     def __init__(self, dataset, tokenizer, max_len, is_train=False):
-        self.dataset = dataset
+        self.texts = dataset['text']
+        self.labels = dataset['label']
         self.tokenizer = tokenizer
         self.max_len = max_len
         self.is_train = is_train
@@ -183,26 +184,21 @@ class AugReviewDataset(Dataset):
         return len(self.dataset)
 
     def __getitem__(self, idx):
-        row = self.dataset[idx]
-        text = row['text']
-        label = row['label']
-
-        # 학습용 데이터셋일 경우에만 증강 적용
+        text = self.texts[idx]
         if self.is_train and self.aug:
             text = self.aug.augment(text)
-
-        # 토크나이징
-        encoded = self.tokenizer.encode(
-            text,
+        encoded = self.tokenizer(
+            clean_text(text),
+            add_special_tokens=True,
             max_length=self.max_len,
+            padding="max_length",   # LSTM 입력을 동일 길이로 맞춤
             truncation=True
         )
-
-        ids = torch.tensor(encoded.ids)
-        length = len(encoded.ids)
-        label = torch.tensor(label, dtype=torch.float)
-
-        return ids, length, label
+        token_ids = torch.tensor(encoded["input_ids"], dtype=torch.long) # 다중클래스를 위한 정수 타입
+        # 길이 (pad 제외)
+        length = sum(1 for t in encoded["input_ids"] if t != self.tokenizer.pad_token_id)
+        label = torch.tensor(self.labels[idx], dtype=torch.long)
+        return token_ids, length, label
 
 
 class ReviewDataset(Dataset):
