@@ -181,7 +181,7 @@ class AugReviewDataset(Dataset):
             self.aug = None # 학습용이 아니면 증강 안함
 
     def __len__(self):
-        return len(self.dataset)
+        return len(self.labels)
 
     def __getitem__(self, idx):
         text = self.texts[idx]
