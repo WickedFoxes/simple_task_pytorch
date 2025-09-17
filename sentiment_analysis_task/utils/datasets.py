@@ -7,6 +7,7 @@ from torch.nn.utils.rnn import pad_sequence
 
 from datasets import load_from_disk
 # 데이터 증강을 위한 nlpaug 라이브러리 임포트
+import nlpaug.flow as naf
 import nlpaug.augmenter.word as naw
 
 def build_train_dataloader(
@@ -169,11 +170,9 @@ class AugReviewDataset(Dataset):
 
         # 학습 데이터셋에만 적용할 증강 파이프라인 정의
         if self.is_train:
-            self.aug = naw.Sequential([
-                # WordNet을 이용해 동의어로 교체 (전체 단어의 10%를)
-                naw.SynonymAug(aug_p=0.1),
-                # 전체 단어의 10%를 랜덤으로 삭제
-                naw.RandomWordAug(action="delete", aug_p=0.1),
+            self.aug = naf.Sequential([
+                naw.SynonymAug(aug_src='wordnet'),
+                naw.RandomWordAug(action="swap")
             ])
         else:
             self.aug = None # 학습용이 아니면 증강 안함
