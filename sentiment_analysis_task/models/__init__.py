@@ -31,7 +31,6 @@ def build_model(model_name : str,
             bidirectional=bidirectional,
             dropout=dropout,
             pad_idx=pad_idx,
-            dropconnect=0.3
         )
     return model
     
