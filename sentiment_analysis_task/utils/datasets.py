@@ -131,10 +131,10 @@ class ReviewDataset(Dataset):
             padding="max_length",   # LSTM 입력을 동일 길이로 맞춤
             truncation=True
         )
-        token_ids = torch.tensor(encoded["input_ids"], dtype=torch.long)
+        token_ids = torch.tensor(encoded["input_ids"], dtype=torch.long) # 다중클래스를 위한 정수 타입
         # 길이 (pad 제외)
         length = sum(1 for t in encoded["input_ids"] if t != self.tokenizer.pad_token_id)
-        label = torch.tensor(float(self.labels[idx]), dtype=torch.float32)
+        label = torch.tensor(self.labels[idx], dtype=torch.long)
         return token_ids, length, label
     
 
