@@ -216,12 +216,12 @@ if __name__ == '__main__':
     elif model_name == 'resnet_mini_v2':
         model = ResNet_mini_v2(num_classes=num_classes,
                                layers = [3,4,6],
-                               dropout = 0,
+                            #    dropout = 0,
                                k = 4)
     elif model_name == 'wide_resnet_mini_v2':
         model = ResNet_mini_v2(num_classes=num_classes,
                                layers = [2,2,2],
-                               dropout = 0.3,
+                            #    dropout = 0.3,
                                k = 8)
 
     total_params = sum(p.numel() for p in model.parameters())
