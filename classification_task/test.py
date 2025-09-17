@@ -3,7 +3,7 @@ import time
 import argparse
 import torch
 
-from models import CustomNet, ResNet_mini
+from models import build_model
 from utils.datasets import build_test_dataloader
 from utils.evaluate import accuracy
 from utils.loss import build_loss
@@ -57,10 +57,7 @@ if __name__ == '__main__':
         img_size=img_size,
     )
     
-    if model_name == 'resnet':
-        model = ResNet_mini(num_classes=num_classes)
-    elif model_name == 'custom':
-        model = CustomNet(num_classes=num_classes)
+    model = build_model(model_name, num_classes=num_classes)
 
     ckpt = torch.load(ckpt_path, map_location="cpu")
     model.load_state_dict(ckpt["model"])
