@@ -6,6 +6,8 @@ from torch.utils.data import Dataset, DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
 from datasets import load_from_disk
+# 데이터 증강을 위한 nlpaug 라이브러리 임포트
+import nlpaug.augmenter.word as naw
 
 def build_train_dataloader(
     dataset_name,
@@ -18,6 +20,15 @@ def build_train_dataloader(
 ):
     if dataset_name == 'imdb':
         train_loader, valid_loader = get_imdb_train_dataloader(
+            tokenizer,
+            data_dir=data_dir,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            valid_ratio=valid_ratio,
+            max_len=max_len
+        )
+    elif dataset_name == 'imdb_aug':
+        train_loader, valid_loader = get_imdb_aug_train_dataloader(
             tokenizer,
             data_dir=data_dir,
             batch_size=batch_size,
@@ -82,6 +93,44 @@ def get_imdb_train_dataloader(
     )
     return train_loader, valid_loader
 
+def get_imdb_aug_train_dataloader(
+        tokenizer,
+        data_dir="./data",
+        batch_size=128,
+        num_workers=4,
+        max_len=256,
+        valid_ratio=0.1,
+    ):
+    dataset = load_from_disk(os.path.join(data_dir, "train"))
+    dataset = dataset.train_test_split(test_size=valid_ratio)
+    
+    train_ds = AugReviewDataset(dataset["train"], tokenizer, max_len, is_train=True)
+    valid_ds  = AugReviewDataset(dataset["test"],  tokenizer, max_len, is_train=False)
+
+    pad_idx = tokenizer.get_vocab()["[PAD]"]
+    def collate_fn(batch):
+        ids_list, lengths, labels = [], [], []
+        for ids, length, label in batch:
+            ids_list.append(ids)
+            lengths.append(length)
+            labels.append(label)
+        
+        padded = pad_sequence(ids_list, batch_first=True, padding_value=pad_idx)
+        lengths = torch.tensor(lengths, dtype=torch.long)
+        labels = torch.stack(labels)
+        return padded, lengths, labels
+    
+    train_loader = DataLoader(
+        train_ds, batch_size=batch_size, shuffle=True,
+        num_workers=num_workers, pin_memory=True, collate_fn=collate_fn
+    )
+    valid_loader = DataLoader(
+        valid_ds, batch_size=batch_size, shuffle=False,
+        num_workers=num_workers, pin_memory=True, collate_fn=collate_fn
+    )
+    return train_loader, valid_loader
+
+
 def get_imdb_test_dataloader(
         tokenizer,
         data_dir="./data",
@@ -110,6 +159,49 @@ def get_imdb_test_dataloader(
         num_workers=num_workers, pin_memory=True, collate_fn=collate_fn
     )
     return test_loader
+
+class AugReviewDataset(Dataset):
+    def __init__(self, dataset, tokenizer, max_len, is_train=False):
+        self.dataset = dataset
+        self.tokenizer = tokenizer
+        self.max_len = max_len
+        self.is_train = is_train
+
+        # 학습 데이터셋에만 적용할 증강 파이프라인 정의
+        if self.is_train:
+            self.aug = naw.Sequential([
+                # WordNet을 이용해 동의어로 교체 (전체 단어의 10%를)
+                naw.SynonymAug(aug_p=0.1),
+                # 전체 단어의 10%를 랜덤으로 삭제
+                naw.RandomWordAug(action="delete", aug_p=0.1),
+            ])
+        else:
+            self.aug = None # 학습용이 아니면 증강 안함
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        row = self.dataset[idx]
+        text = row['text']
+        label = row['label']
+
+        # 학습용 데이터셋일 경우에만 증강 적용
+        if self.is_train and self.aug:
+            text = self.aug.augment(text)
+
+        # 토크나이징
+        encoded = self.tokenizer.encode(
+            text,
+            max_length=self.max_len,
+            truncation=True
+        )
+
+        ids = torch.tensor(encoded.ids)
+        length = len(encoded.ids)
+        label = torch.tensor(label, dtype=torch.float)
+
+        return ids, length, label
 
 
 class ReviewDataset(Dataset):
