@@ -7,17 +7,55 @@ from torch.nn.utils.rnn import pad_sequence
 
 from datasets import load_from_disk
 
+def build_train_dataloader(
+    dataset_name,
+    tokenizer,
+    data_dir,
+    batch_size,
+    num_workers=4,
+    valid_ratio=0.1,
+    max_len=400
+):
+    if dataset_name == 'imdb':
+        train_loader, valid_loader = get_imdb_train_dataloader(
+            tokenizer,
+            data_dir=data_dir,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            valid_ratio=valid_ratio,
+            max_len=max_len
+        )
+    return train_loader, valid_loader
+
+def build_test_dataloader(
+    dataset_name,
+    tokenizer,
+    data_dir,
+    batch_size,
+    num_workers=4,
+    max_len=400 
+):
+    if dataset_name == 'imdb':
+        test_loader = get_imdb_test_dataloader(
+            tokenizer,
+            data_dir=data_dir,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            max_len=max_len
+        )
+    return test_loader
+    
 def get_imdb_train_dataloader(
         tokenizer,
-        data_path="./data",
+        data_dir="./data",
         batch_size=128,
         num_workers=4,
         max_len=256,
-        seed=42,
         valid_ratio=0.1,
     ):
-    dataset = load_from_disk(os.path.join(data_path, "train"))
-    dataset = dataset.train_test_split(test_size=valid_ratio, seed=seed)
+    dataset = load_from_disk(os.path.join(data_dir, "train"))
+    dataset = dataset.train_test_split(test_size=valid_ratio)
+    
     train_ds = ReviewDataset(dataset["train"], tokenizer, max_len)
     valid_ds  = ReviewDataset(dataset["test"],  tokenizer, max_len)
 
@@ -46,12 +84,12 @@ def get_imdb_train_dataloader(
 
 def get_imdb_test_dataloader(
         tokenizer,
-        data_path="./data",
+        data_dir="./data",
         batch_size=128,
         num_workers=4,
         max_len=256,
     ):
-    dataset = load_from_disk(os.path.join(data_path, "test"))
+    dataset = load_from_disk(os.path.join(data_dir, "test"))
     test_ds = ReviewDataset(dataset, tokenizer, max_len)
 
     pad_idx = tokenizer.get_vocab()["[PAD]"]

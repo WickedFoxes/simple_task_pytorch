@@ -3,12 +3,12 @@ import time
 import argparse
 import torch
 
-from utils.datasets import get_imdb_test_dataloader
+from utils.datasets import build_test_dataloader
 from utils.evaluate import accuracy
 from utils.loss import build_loss
 from utils.util import set_seed
 
-from models import LSTMClassifier
+from models import build_model
 
 from transformers import AutoTokenizer
 
@@ -70,25 +70,26 @@ if __name__ == '__main__':
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Device: {device}")
 
-    if dataset == 'imdb':
-        test_loader = get_imdb_test_dataloader(
-            tokenizer,
-            data_path=data_dir,
-            batch_size=batch_size,
-            num_workers=num_workers,
-            max_len=max_len
-        )
+    test_loader = build_test_dataloader(
+        dataset_name=dataset,
+        tokenizer=tokenizer,
+        data_dir=data_dir,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        max_len=max_len
+    )
 
-    if model_name == 'lstm_classification':
-        model = LSTMClassifier(
-            vocab_size=len(vocab),
-            embed_dim=embed_dim,
-            hidden_dim=hidden_dim,
-            num_layers=num_layers,
-            bidirectional=bidirectional,
-            dropout=dropout,
-            pad_idx=pad_idx
-        )
+    model = build_model(
+        model_name=model_name,
+        num_classes=num_classes,
+        vocab_size=len(vocab),
+        embed_dim=embed_dim,
+        hidden_dim=hidden_dim,
+        num_layers=num_layers,
+        bidirectional=bidirectional,
+        dropout=dropout,
+        pad_idx=pad_idx
+    )
 
     ckpt = torch.load(ckpt_path, map_location="cpu")
     model.load_state_dict(ckpt["model"])

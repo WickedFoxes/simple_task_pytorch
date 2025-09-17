@@ -15,7 +15,7 @@ from utils.evaluate import evaluate, accuracy
 from utils.loss import build_loss
 from utils.datasets import get_imdb_train_dataloader
 
-from models import LSTMClassifier
+from models import build_model
 
 def train_one_epoch(model, loader, optimizer, scaler, device, criterion, max_grad_norm = 1.0):
     model.train()
@@ -235,26 +235,28 @@ if __name__ == '__main__':
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Device: {device}")
 
-    if dataset == 'imdb':
-        train_loader, valid_loader = get_imdb_train_dataloader(
-            tokenizer,
-            data_path=data_dir,
-            batch_size=batch_size,
-            num_workers=num_workers,
-            valid_ratio=0.1,
-            max_len=max_len
-        )
+    train_loader, valid_loader = get_imdb_train_dataloader(
+        dataset_name=dataset,
+        tokenizer=tokenizer,
+        data_dir=data_dir,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        valid_ratio=0.1,
+        max_len=max_len
+    )
     
-    if model_name == 'lstm_classification':
-        model = LSTMClassifier(
-            vocab_size=len(vocab),
-            embed_dim=embed_dim,
-            hidden_dim=hidden_dim,
-            num_layers=num_layers,
-            bidirectional=bidirectional,
-            dropout=dropout,
-            pad_idx=pad_idx
-        )
+    model = build_model(
+        model_name=model_name,
+        num_classes=num_classes,
+        vocab_size=len(vocab),
+        embed_dim=embed_dim,
+        hidden_dim=hidden_dim,
+        num_layers=num_layers,
+        bidirectional=bidirectional,
+        dropout=dropout,
+        pad_idx=pad_idx
+    )
+
 
     total_params = sum(p.numel() for p in model.parameters())
     print(f"{model_name} Total parameters: {total_params/1000000}M")
@@ -272,6 +274,8 @@ if __name__ == '__main__':
         scheduler_type=scheduler_type,
         optimizer_type=optimizer_type,
         patience=patience,
+        use_early_stopping=use_early_stopping,
+        loss_type=loss_type,
     )
 
     os.makedirs(ckpt_dir, exist_ok=True)

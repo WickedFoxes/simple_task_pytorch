@@ -4,7 +4,7 @@ from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence
 
 class LSTMClassifier(nn.Module):
-    def __init__(self, vocab_size, embed_dim, hidden_dim, num_layers, bidirectional, dropout, pad_idx):
+    def __init__(self, vocab_size, embed_dim, hidden_dim, num_layers, bidirectional, dropout, pad_idx, num_classes=2):
         super().__init__()
         self.bidirectional = bidirectional
         self.embedding = nn.Embedding(vocab_size, embed_dim, padding_idx=pad_idx)
@@ -17,7 +17,7 @@ class LSTMClassifier(nn.Module):
             dropout=dropout if num_layers > 1 else 0.0,
         )
         out_dim = hidden_dim * (2 if bidirectional else 1)
-        self.fc = nn.Linear(out_dim, 1)
+        self.fc = nn.Linear(out_dim, num_classes)
         self.dropout = nn.Dropout(dropout)
 
         # Xavier 초기화(선택)
@@ -37,5 +37,5 @@ class LSTMClassifier(nn.Module):
         else:
             h = h_n[-1, :, :]  # [B, H]
 
-        logits = self.fc(self.dropout(h)).squeeze(1)  # [B]
-        return logits  # (BCEWithLogitsLoss와 함께 사용)
+        logits = self.fc(self.dropout(h))  # [B, C]
+        return logits
