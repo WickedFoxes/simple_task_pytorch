@@ -1,4 +1,6 @@
-from .lstm_classfication import LSTMClassifier, LSTMClassifier_v2
+from .lstm_classfication import *
+from .lstm_attention_classification import *
+
 
 def build_model(model_name : str,
             vocab_size,
@@ -21,8 +23,8 @@ def build_model(model_name : str,
             dropout=dropout,
             pad_idx=pad_idx
         )
-    elif model_name == 'lstm_classification_v2':
-        model = LSTMClassifier_v2(
+    elif model_name == 'lstm_attention_classification':
+        model = LSTMAttentionClassifier(
             vocab_size=vocab_size,
             num_classes=num_classes,
             embed_dim=embed_dim,
