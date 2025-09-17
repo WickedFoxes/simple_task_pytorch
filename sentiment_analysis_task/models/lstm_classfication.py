@@ -51,21 +51,13 @@ class LNLSTMCell(nn.Module):
     c_t = sigma(f) ⊙ c_{t-1} + sigma(i) ⊙ tanh(g)
     h_t = sigma(o) ⊙ tanh(LN(c_t))
     """
-    def __init__(self, input_dim: int, hidden_dim: int, bias: bool = True, dropconnect: float = 0.0):
+    def __init__(self, input_dim: int, hidden_dim: int, bias: bool = True):
         super().__init__()
         self.hidden_dim = hidden_dim
 
         # Separate affine for x_t and h_{t-1}; bias는 합산 후에 한 번만 사용
         self.x2h = nn.Linear(input_dim, 4 * hidden_dim, bias=False)
-        
-        # self.h2h = nn.Linear(hidden_dim, 4 * hidden_dim, bias=False)
-        
-        # ----- DropConnect 적용 부분 -----
-        # 1. h2h 선형 레이어를 먼저 정의합니다.
-        h2h_layer = nn.Linear(hidden_dim, 4 * hidden_dim, bias=False)
-        # 2. WeightDrop으로 감싸서 순환 가중치('weight')에 드롭커넥트를 적용합니다.
-        self.h2h = WeightDrop(h2h_layer, ['weight'], dropout=dropconnect)
-        # ---------------------------------
+        self.h2h = nn.Linear(hidden_dim, 4 * hidden_dim, bias=False)
         
         self.bias = nn.Parameter(torch.zeros(4 * hidden_dim)) if bias else None
 
@@ -95,7 +87,7 @@ class LNLSTMCell(nn.Module):
 # ----- Stacked (bi)directional Layer using LNLSTMCell -----
 class LNLSTMLayer(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_layers=1,
-                 bidirectional=False, dropout=0.0, dropconnect=0.0):
+                 bidirectional=False, dropout=0.0):
         super().__init__()
         self.num_layers = num_layers
         self.bidirectional = bidirectional
@@ -104,13 +96,13 @@ class LNLSTMLayer(nn.Module):
 
         # forward cells per layer
         self.f_cells = nn.ModuleList([
-            LNLSTMCell(input_dim if l == 0 else hidden_dim, hidden_dim, dropconnect=dropconnect)
+            LNLSTMCell(input_dim if l == 0 else hidden_dim, hidden_dim)
             for l in range(num_layers)
         ])
         if bidirectional:
             # backward cells per layer
             self.b_cells = nn.ModuleList([
-                LNLSTMCell(input_dim if l == 0 else hidden_dim, hidden_dim, dropconnect=dropconnect)
+                LNLSTMCell(input_dim if l == 0 else hidden_dim, hidden_dim)
                 for l in range(num_layers)
             ])
 
@@ -176,7 +168,7 @@ class LNLSTMLayer(nn.Module):
 # ----- 최종 분류기 -----
 class LSTMClassifier_v2(nn.Module):
     def __init__(self, vocab_size, embed_dim, hidden_dim, num_layers,
-                 bidirectional, dropout, pad_idx, num_classes=2, dropconnect=0.0):
+                 bidirectional, dropout, pad_idx, num_classes=2):
         super().__init__()
         self.bidirectional = bidirectional
         self.embedding = nn.Embedding(vocab_size, embed_dim, padding_idx=pad_idx)
@@ -187,7 +179,6 @@ class LSTMClassifier_v2(nn.Module):
             num_layers=num_layers,
             bidirectional=bidirectional,
             dropout=dropout if num_layers > 1 else 0.0,
-            dropconnect=dropconnect,
         )
 
         out_dim = hidden_dim * (2 if bidirectional else 1)
@@ -206,38 +197,3 @@ class LSTMClassifier_v2(nn.Module):
         _, h_last = self.rnn(emb, lengths)       # [B,out_dim]
         logits = self.fc(self.dropout(h_last))   # [B,C]
         return logits
-
-
-class WeightDrop(nn.Module):
-    """
-    기존 모듈의 가중치에 DropConnect를 적용하는 래퍼 클래스.
-    forward pass마다 지정된 가중치에 dropout을 적용합니다.
-    """
-    def __init__(self, module: nn.Module, weights: list, dropout: float = 0.0):
-        super().__init__()
-        self.module = module
-        self.weights = weights  # 드롭아웃을 적용할 가중치 파라미터의 이름 리스트 (예: ['weight'])
-        self.dropout = dropout
-        self._setup()
-
-    def _setup(self):
-        # 원본 가중치 파라미터를 '_raw' 접미사를 붙여 백업하고,
-        # 모듈에서 해당 파라미터를 삭제합니다.
-        # 이렇게 해야 원본 가중치가 nn.Module의 파라미터로 중복 등록되지 않습니다.
-        for name in self.weights:
-            param = getattr(self.module, name)
-            delattr(self.module, name)
-            self.register_parameter(name + '_raw', nn.Parameter(param.data))
-
-    def _set_weights(self):
-        # forward 시점에 '_raw' 가중치에 드롭아웃을 적용하여
-        # 모듈의 원래 가중치 이름으로 설정합니다.
-        for name in self.weights:
-            raw_w = getattr(self, name + '_raw')
-            # 훈련 모드일 때만 드롭아웃 적용
-            w = F.dropout(raw_w, p=self.dropout, training=self.training)
-            setattr(self.module, name, w)
-
-    def forward(self, *args):
-        self._set_weights()
-        return self.module(*args)
