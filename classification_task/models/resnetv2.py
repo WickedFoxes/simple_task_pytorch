@@ -21,6 +21,7 @@ class BasicBlock(nn.Module):
                  in_channels,
                  out_channels,
                  stride,
+                 dropout = 0.0
         ):
         super(BasicBlock, self).__init__()
 
@@ -40,6 +41,7 @@ class BasicBlock(nn.Module):
             stride=1,
             padding=1,
             bias=False)
+        self.dropout = nn.Dropout(p=dropout)
 
         self.shortcut = nn.Sequential()
         if in_channels != out_channels or stride != 1:
@@ -59,6 +61,7 @@ class BasicBlock(nn.Module):
         out = self.conv1(x)
 
         out = F.relu(self.bn2(out), inplace=True)
+        out = self.dropout(out)
         out = self.conv2(out)
 
         out += self.shortcut(x)
@@ -70,7 +73,9 @@ class ResNet_mini_v2(nn.Module):
     def __init__(self,
                  layers:List[int] = [2, 2, 2],
                  num_classes : int=10,
-                 k = 4):
+                 k = 4,
+                 dropout = 0
+        ):
         super(ResNet_mini_v2, self).__init__()
 
         n_classes = num_classes
@@ -94,24 +99,27 @@ class ResNet_mini_v2(nn.Module):
             base_channels,
             n_channels[0],
             n_blocks=layers[0],
-            stride=1)
+            stride=1,
+            dropout = dropout)
         self.stage2 = self._make_stage(
             n_channels[0],
             n_channels[1],
             n_blocks=layers[1],
-            stride=2)
+            stride=2,
+            dropout = dropout)
         self.stage3 = self._make_stage(
             n_channels[1],
             n_channels[2],
             n_blocks=layers[2],
-            stride=2)
+            stride=2,
+            dropout = dropout)
         self.bn = nn.BatchNorm2d(n_channels[2])
         self.fc = nn.Linear(n_channels[2], n_classes)
 
         # initialize weights
         self.apply(initialize_weights)
 
-    def _make_stage(self, in_channels, out_channels, n_blocks, stride):
+    def _make_stage(self, in_channels, out_channels, n_blocks, stride, dropout = 0.0):
         stage = nn.Sequential()
         for index in range(n_blocks):
             block_name = f'block{index + 1}'
@@ -121,7 +129,8 @@ class ResNet_mini_v2(nn.Module):
                     BasicBlock(
                         in_channels,
                         out_channels,
-                        stride=stride)
+                        stride=stride,
+                        dropout = dropout)
                 )
             else:
                 stage.add_module(
@@ -130,6 +139,7 @@ class ResNet_mini_v2(nn.Module):
                         out_channels,
                         out_channels,
                         stride=1,
+                        dropout = dropout
                     )
                 )
         return stage
