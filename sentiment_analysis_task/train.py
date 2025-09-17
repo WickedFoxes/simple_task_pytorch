@@ -13,7 +13,7 @@ from utils.scheduler import build_scheduler
 from utils.optimizer import build_optimizer
 from utils.evaluate import evaluate, accuracy
 from utils.loss import build_loss
-from utils.datasets import get_imdb_train_dataloader
+from utils.datasets import build_train_dataloader
 
 from models import build_model
 
@@ -235,7 +235,7 @@ if __name__ == '__main__':
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Device: {device}")
 
-    train_loader, valid_loader = get_imdb_train_dataloader(
+    train_loader, valid_loader = build_train_dataloader(
         dataset_name=dataset,
         tokenizer=tokenizer,
         data_dir=data_dir,
