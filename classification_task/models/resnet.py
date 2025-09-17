@@ -70,50 +70,6 @@ class BasicBlock(nn.Module):
 
         return out
 
-class BasicBlock_v2(nn.Module):
-    def __init__(
-        self,
-        inplanes: int,
-        planes: int,
-        stride: int = 1,
-        downsample: Optional[nn.Module] = None,
-        norm_layer: Optional[Callable[..., nn.Module]] = None,
-        dropout: float = 0.0,
-    ) -> None:
-        super().__init__()
-        if norm_layer is None:
-            norm_layer = nn.BatchNorm2d
-        
-        self.bn1 = norm_layer(inplanes)
-        self.conv1 = conv3x3(inplanes, planes, stride)
-        
-        self.bn2 = norm_layer(planes)
-        self.conv2 = conv3x3(planes, planes)
-        
-        self.relu = nn.ReLU(inplace=True)
-        self.downsample = downsample
-        self.stride = stride
-        self.dropout = nn.Dropout2d(dropout)
-
-    def forward(self, x: Tensor) -> Tensor:
-        identity = x
-
-        out = self.bn1(x)
-        out = self.relu(out)
-        out = self.conv1(out)
-
-        out = self.bn2(out)
-        out = self.relu(out)
-        out = self.dropout(out)
-        out = self.conv2(out)
-
-        if self.downsample is not None:
-            identity = self.downsample(x)
-
-        out += identity
-
-        return out
-
 
 class Bottleneck(nn.Module):
     # Bottleneck in torchvision places the stride for downsampling at 3x3 convolution(self.conv2)
@@ -203,80 +159,6 @@ class ResNet_mini(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x:Tensor) -> Tensor:
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        
-        x = self.avgpool(x)
-        x = torch.flatten(x, 1)
-        x = self.fc(x)
-
-        return x
-    
-class ResNet_mini_v2(nn.Module):
-    def __init__(
-    self,
-    layers:List[int],
-    num_classes : int=10,
-    dropout: float = 0.0,
-    k :int = 4
-    )-> None:
-        super().__init__()
-        self.inplanes = 16 #input shape
-        self.norm_layer = nn.BatchNorm2d
-
-        self.init_conv = conv3x3(3, self.inplanes, 1)
-        self.layer1 = self._make_layer(in_planes=self.inplanes,
-                                       out_planes=self.inplanes*k,
-                                       blocks=layers[0],
-                                       stride=1,
-                                       dropout=dropout)
-        self.layer2 = self._make_layer(in_planes=self.inplanes*k,
-                                       out_planes=self.inplanes*k*2,
-                                       stride=2,
-                                       blocks=layers[1], 
-                                       dropout=dropout)
-        self.layer3 = self._make_layer(in_planes=self.inplanes*k*2,
-                                       out_planes=self.inplanes*k*4,
-                                       stride=2,
-                                       blocks=layers[2], 
-                                       dropout=dropout)
-        self.avgpool = nn.AdaptiveAvgPool2d((1,1))
-        self.fc = nn.Linear(self.inplanes*k*4, num_classes)
-
-    def _make_layer(
-            self, 
-            blocks:int, 
-            in_planes:int, 
-            out_planes:int, 
-            stride: int=1,
-            dropout:float=0.0
-    ):
-        norm_layer = self.norm_layer
-        downsample = None
-        #downsampling 필요한 경우 downsample layer 생성
-        if stride !=1 or in_planes != out_planes:
-            downsample = nn.Sequential(
-                conv1x1(in_planes, out_planes, stride),
-                norm_layer(out_planes),
-            )
-        layers = []
-        layers.append(BasicBlock_v2(inplanes=in_planes, 
-                            planes=out_planes, 
-                            stride=stride, 
-                            downsample=downsample, 
-                            norm_layer=norm_layer, 
-                            dropout=dropout))
-        for _ in range(1, blocks):
-            layers.append(BasicBlock_v2(inplanes=out_planes, 
-                                planes=out_planes,  
-                                norm_layer = norm_layer,
-                                dropout=dropout))
-
-        return nn.Sequential(*layers)
-
-    def forward(self, x):
-        x = self.init_conv(x)
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)

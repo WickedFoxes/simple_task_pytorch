@@ -3,7 +3,7 @@ import time
 import argparse
 import torch
 
-from models import CustomNet, ResNet_mini, ResNet_mini_v2, BasicBlock_v2
+from models import CustomNet, ResNet_mini, ResNet_mini_v2
 from utils.scheduler import build_scheduler
 from utils.util import set_seed
 from utils.optimizer import build_optimizer
