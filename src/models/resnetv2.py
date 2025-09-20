@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from src.registry import register
-from src.models import ModelBase
+from src.models.base import ModelBase
 
 def initialize_weights(module):
     if isinstance(module, nn.Conv2d):

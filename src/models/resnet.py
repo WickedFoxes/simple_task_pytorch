@@ -3,6 +3,7 @@ import torch.nn as nn
 from torch import Tensor
 from typing import Callable, List, Optional, Type, Union
 from src.registry import register
+from src.models.base import ModelBase
 
 def conv3x3(in_planes: int, out_planes: int, stride: int = 1, groups: int = 1, dilation: int = 1) -> nn.Conv2d:
     """3x3 convolution with padding"""
@@ -215,7 +216,7 @@ class ResNet(nn.Module):
     
 
 @register("model", "resnet_mini")
-class ResNet_mini(nn.Module):
+class ResNet_mini(ModelBase):
     def __init__(
     self,
     num_classes : int=10,
