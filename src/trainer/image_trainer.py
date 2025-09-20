@@ -62,14 +62,14 @@ class ImageTrainer:
             if hasattr(self.logger, "log_metrics"):
                 self.logger.log_metrics(
                     {
+                        "epoch": epoch,
                         "train_loss": train_loss,
                         "train_acc": train_acc,
                         "valid_loss": val_loss,
                         "valid_acc": val_acc,
                         "lr": float(current_lr) if current_lr is not None else float("nan"),
+                        "elapsed_time": elapsed,
                     },
-                    epoch=epoch,
-                    elapsed_time=elapsed,
                 )
 
             for h in self.hooks:
