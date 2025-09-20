@@ -32,7 +32,7 @@ if __name__ == '__main__':
         "dataset", cfg.dataset.name, 
         train_tf=train_tf,
         eval_tf=eval_tf,
-        **{k:v for k,v in cfg.dataset.items() if k!="name"}
+        cfg = cfg.dataset
     )
     print("#### train_loader ####")
     print(train_loader)
