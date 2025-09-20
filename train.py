@@ -6,7 +6,7 @@ from src.registry import build
 from src.utils.seed import set_seed
 from src.aug.augmentaion import build_transform
 
-from src.datasets import *
+import src.datasets
 # from src.engine.trainer import Trainer
 # from src.engine.hooks import EarlyStopping
 
@@ -21,6 +21,10 @@ if __name__ == '__main__':
     # 1) 증강
     train_tf = build_transform(cfg.augment.train)
     eval_tf  = build_transform(cfg.augment.eval)
+    print("#### train_tf ####")
+    print(train_tf)
+    print("#### eval_tf ####")
+    print(eval_tf)    
 
     # 2) 데이터로더
     train_loader, val_loader = build(
