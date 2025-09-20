@@ -4,7 +4,7 @@ from src.hook.base import Hook
 
 class CheckpointSaver(Hook):
     def __init__(self, save_dir="checkpoints", monitor="val/acc", mode="max",
-                 save_best=True, save_last=True, filename="epoch{epoch:03d}.ckpt"):
+                 save_best=True, save_last=False, filename="epoch{epoch:03d}.ckpt"):
         self.save_dir = save_dir
         self.monitor = monitor
         self.mode = mode
