@@ -27,7 +27,7 @@ class SimpleLogger(LoggerBase):
         """
         # 최고 정확도 갱신 시 출력
         if metrics["valid_acc"] > self.best_acc:
-            self.best_acc = metrics["test_acc"]
+            self.best_acc = metrics["valid_acc"]
             print(f"New best accuracy: {self.best_acc:.4f} at epoch {epoch}")
 
         # 로그 라인 출력
