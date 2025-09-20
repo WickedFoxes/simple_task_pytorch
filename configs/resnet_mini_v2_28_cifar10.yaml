@@ -54,7 +54,8 @@ trainer:
   amp: true             # mixed precision
   val_interval: 1       # 에폭 단위 검증
   save_best: true
-  checkpoint_saver:
-    save_dir: "checkpoints"
-    save_best: true
-    save_last: false
+
+checkpoint_saver:
+  save_dir: "checkpoints"
+  save_best: true
+  save_last: false

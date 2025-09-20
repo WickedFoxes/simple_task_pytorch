@@ -5,8 +5,7 @@ from src.registry import register
 
 @register("logger", "simple")
 class SimpleLogger(LoggerBase):
-    def __init__(self, max_epochs):
-        self.max_epochs = max_epochs
+    def __init__(self):
         self.best_acc = 0.0
         self.params = {}
         self.metrics_history = []
