@@ -7,6 +7,7 @@ from src.utils.seed import set_seed
 from src.aug.augmentaion import build_transform
 
 import src.datasets
+import src.models
 # from src.engine.trainer import Trainer
 # from src.engine.hooks import EarlyStopping
 
@@ -44,22 +45,34 @@ if __name__ == '__main__':
         "model", cfg.model.name, 
         **{k:v for k,v in cfg.model.items() if k!="name"}
     )
+    print("#### model ####")
+    print(model)
+
     optimizer = build(
         "optimizer", cfg.optimizer.name, 
         params=model.parameters(), 
         **{k:v for k,v in cfg.optimizer.items() if k!="name"}
     )
+    print("#### optimizer ####")
+    print(optimizer)
+
     scheduler = build(
         "scheduler", cfg.scheduler.name, 
         optimizer=optimizer, 
         **{k:v for k,v in cfg.scheduler.items() if k!="name"}
     )
+    print("#### scheduler ####")
+    print(scheduler)
+
 
     # 4) 로거
     logger = build(
         "logger", cfg.logger.name, 
         **{k:v for k,v in cfg.logger.items() if k!="name"}
     )
+    print("#### logger ####")
+    print(logger)
+
 
     # 5) 트레이너
     trainer = build(
@@ -67,6 +80,8 @@ if __name__ == '__main__':
         model=model, optimizer=optimizer, scheduler=scheduler, logger=logger, hooks=[],
         cfg=cfg
     )
+    print("#### trainer ####")
+    print(trainer)
     # trainer = Trainer(model, optimizer, scheduler, logger, hooks=[EarlyStopping(**cfg.train.early_stop)], cfg=cfg)
     
     # 6) 손실함수
@@ -74,6 +89,8 @@ if __name__ == '__main__':
         "loss", cfg.loss.name, 
         **{k:v for k,v in cfg.loss.items() if k!="name"}
     )
+    print("#### criterion ####")
+    print(criterion)
     # criterion = nn.CrossEntropyLoss()
 
     device = cfg.device if torch.cuda.is_available() else "cpu"
