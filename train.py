@@ -31,8 +31,12 @@ if __name__ == '__main__':
         "dataset", cfg.dataset.name, 
         train_tf=train_tf,
         eval_tf=eval_tf,
-        **{k:v for k,v in cfg.model.items() if k!="name"}
+        **{k:v for k,v in cfg.dataset.items() if k!="name"}
     )
+    print("#### train_loader ####")
+    print(train_loader)
+    print("#### val_loader ####")
+    print(val_loader)
 
     # 3) 모델/옵티마이저/스케줄러
     model = build(
