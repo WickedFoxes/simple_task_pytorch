@@ -9,7 +9,7 @@ class CIFAR100Wrap(DatasetBase):
     def __len__(self): return len(self.ds)
     def __getitem__(self, i): return self.ds[i]
 
-@register("dataset", "cifar10")
+@register("dataset", "cifar100")
 def build_cifar100_dataloaders(cfg, train_tf, eval_tf):
     # 통일된 DataLoader 생성 함수 (원한다면 레지스트리에 등록)
     train_set = CIFAR100Wrap.from_config(cfg["data"], transform=train_tf, train=True)
