@@ -43,8 +43,9 @@ loss:
   name: "cross_entropy"
 
 logger:
-  name: "tensorboard"   # "wandb" 도 가능
-  log_dir: "./runs"
+  name: "wandb"   # "wandb" 도 가능
+  project : "cifar10-image-classification"
+# log_dir: "./runs"
 
 trainer:
   name : "image_trainer"
