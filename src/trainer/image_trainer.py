@@ -56,7 +56,7 @@ class ImageTrainer:
                 self.sched.step()
 
             # 검증
-            val_acc, val_loss = self.evaluate(self.model, val_loader, device, criterion)
+            val_loss, val_acc  = self.evaluate(self.model, val_loader, device, criterion)
             elapsed = time.time() - epoch_start
 
             if hasattr(self.logger, "log_metrics"):
