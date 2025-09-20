@@ -6,7 +6,7 @@ from src.registry import build
 from src.utils.seed import set_seed
 from src.aug.augmentaion import build_transform
 
-# from src.datasets.cifar10 import create_dataloaders
+from src.datasets import *
 # from src.engine.trainer import Trainer
 # from src.engine.hooks import EarlyStopping
 
