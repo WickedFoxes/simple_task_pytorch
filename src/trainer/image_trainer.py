@@ -99,26 +99,27 @@ class ImageTrainer:
             self.logger.finalize(status="success")
 
     @torch.no_grad()
-    def evaluate(self, loader, device, criterion):
-        self.model.eval()
-        correct, total, total_loss = 0, 0, 0.0
-        for xb, yb in loader:
-            xb, yb = xb.to(device), yb.to(device)
-            logits = self.model(xb)
-            loss = criterion(logits, yb)
-            total_loss += loss.item() * xb.size(0)
-            total_acc  += self.accuracy(logits, yb) * xb.size(0)
-            total += yb.size(0)
-        return correct/total, total_loss/total
+    def evaluate(self, model, loader, device, criterion):
+        model.eval()
+        total_loss, total_acc, n = 0.0, 0.0, 0
+        for images, targets in loader:
+            images = images.to(device, non_blocking=True)
+            targets = targets.to(device, non_blocking=True)
+            logits = model(images)
+            loss = criterion(logits, targets)
+            bs = images.size(0)
+            total_loss += loss.item() * bs
+            total_acc  += self.accuracy(logits, targets) * bs
+            n += bs
+        return total_loss / n, total_acc / n
 
     @torch.no_grad()
     def accuracy(self, logits, targets):
-        with torch.no_grad():
-            # logits: [B, C] (CrossEntropyLoss 기준)
-            # targets: [B] (인덱스) 또는 [B, C] (one-hot)
-            if targets.ndim > 1:              # one-hot or soft label
-                targets = targets.argmax(dim=1)
-            else:
-                targets = targets.long()
-            preds = logits.argmax(dim=1)
-            return (preds == targets).float().mean().item()
+        # logits: [B, C] (CrossEntropyLoss 기준)
+        # targets: [B] (인덱스) 또는 [B, C] (one-hot)
+        if targets.ndim > 1:              # one-hot or soft label
+            targets = targets.argmax(dim=1)
+        else:
+            targets = targets.long()
+        preds = logits.argmax(dim=1)
+        return (preds == targets).float().mean().item()
