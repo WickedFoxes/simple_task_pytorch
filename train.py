@@ -8,7 +8,12 @@ from src.aug.augmentaion import build_transform
 
 import src.datasets
 import src.models
-# from src.engine.trainer import Trainer
+import src.optim.optimizer
+import src.scheduler.scheduler
+import src.trainer
+import src.loss.loss
+import src.logger
+
 # from src.engine.hooks import EarlyStopping
 
 if __name__ == '__main__':
