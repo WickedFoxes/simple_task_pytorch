@@ -36,7 +36,7 @@ class TqdmLogger(LoggerBase):
 
     # --- 내부 유틸 ---
     def _open_pbar(self, epoch_label: str | None):
-        if self.pbar:  # 안전 닫기
+        if self.pbar is not None:  # 안전 닫기
             self.pbar.close()
         desc = self.desc if epoch_label is None else f"{self.desc} | epoch {epoch_label}"
         self.pbar = self._tqdm(
@@ -75,7 +75,7 @@ class TqdmLogger(LoggerBase):
 
         # 진행바 후면의 postfix 갱신
         # 너무 많은 키는 시인성 떨어질 수 있으니 주요 값 위주가 좋습니다.
-        if self.pbar:
+        if self.pbar is not None:
             # 숫자/짧은 문자열만 간단히 표시
             postfix = {k: (f"{v:.4f}" if isinstance(v, (int, float)) else v)
                        for k, v in d.items() if k not in (self.total_steps_key,)}
@@ -90,7 +90,7 @@ class TqdmLogger(LoggerBase):
         print("[TqdmLogger] params updated (preview):", preview)
 
     def finalize(self):
-        if self.pbar:
+        if self.pbar is not None:
             self.pbar.close()
         # 전체 파라미터 최종 요약
         if self.params:

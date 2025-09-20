@@ -30,7 +30,6 @@ if __name__ == '__main__':
     eval_tf  = build_transform(cfg.augment.eval)  
 
     # 2) 데이터로더
-    print(cfg.dataset)
     train_loader, val_loader = build(
         "dataset", cfg.dataset.name, 
         train_tf=train_tf,
@@ -78,8 +77,6 @@ if __name__ == '__main__':
         "loss", cfg.loss.name, 
         **{k:v for k,v in cfg.loss.items() if k!="name"}
     )
-    print("#### criterion ####")
-    print(criterion)
 
     device = cfg.device if torch.cuda.is_available() else "cpu"
     trainer.train(train_loader, val_loader, criterion, device)
