@@ -44,7 +44,8 @@ logger:
   log_dir: "./runs"
   # project: "cls-modular"
 
-train:
+trainer:
+  name : "image_trainer"
   epochs: 5
   grad_clip: 1.0
   amp: true             # mixed precision
