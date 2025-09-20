@@ -42,7 +42,7 @@ augment:
 logger:
   name: "tensorboard"   # "wandb" 도 가능
   log_dir: "./runs"
-  project: "cls-modular"
+  # project: "cls-modular"
 
 train:
   epochs: 5
