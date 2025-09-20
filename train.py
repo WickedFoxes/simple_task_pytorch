@@ -27,6 +27,7 @@ if __name__ == '__main__':
     print(eval_tf)    
 
     # 2) 데이터로더
+    print(cfg.dataset)
     train_loader, val_loader = build(
         "dataset", cfg.dataset.name, 
         train_tf=train_tf,
