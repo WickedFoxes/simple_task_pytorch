@@ -1,0 +1,57 @@
+seed: 42
+device: "cuda"
+
+data:
+  name: "cifar10"
+  root: "./data"
+  num_workers: 8
+  batch_size: 128
+  pin_memory: true
+
+model:
+  name: "resnet18"
+  num_classes: 10
+  pretrained: false
+
+optimizer:
+  name: "sgd"
+  lr: 3e-4
+  weight_decay: 0.05
+  betas: [0.9, 0.999]
+
+scheduler:
+  name: "cosine"
+  warmup_epochs: 5
+  max_epochs: 200
+  min_lr: 1e-6
+
+augment:
+  train:
+    - {name: "RandomCrop", size: 32, padding: 4}
+    - {name: "RandomHorizontalFlip", p: 0.5}
+    - {name: "RandAugment", n: 2, m: 9}
+    - {name: "ToTensor", }
+    - {name: "Normalize", mean: [0.491,0.482,0.447], std: [0.247,0.243,0.262]}
+  eval:
+    - {name: "ToTensor", }
+    - {name: "Normalize", mean: [0.491,0.482,0.447], std: [0.247,0.243,0.262]}
+  batch_train:
+    name: "mixcut"          # "mixup" | "cutmix" | "mixcut"
+    mixup_alpha: 0.2
+    cutmix_alpha: 1.0
+    p: 1.0                  # 적용 확률
+    switch_prob: 0.5        # mixup/cutmix 중 선택 확률 (mixcut일 때 사용)
+
+logger:
+  name: "tensorboard"   # "wandb" 도 가능
+  log_dir: "./runs"
+  project: "cls-modular"
+
+train:
+  epochs: 200
+  grad_clip: 1.0
+  amp: true             # mixed precision
+  val_interval: 1       # 에폭 단위 검증
+  save_best: true
+  early_stop:
+    patience: 20

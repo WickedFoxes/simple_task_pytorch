@@ -1,0 +1,9 @@
+from abc import ABC, abstractmethod
+
+class LoggerBase(ABC):
+    @abstractmethod
+    def log_metrics(self, d: dict, step: int): ...
+    @abstractmethod
+    def log_params(self, d: dict): ...
+    @abstractmethod
+    def finalize(self): ...

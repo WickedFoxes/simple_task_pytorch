@@ -1,0 +1,17 @@
+from torchvision import transforms
+
+# 필요 시 Albumentations 도 같은 방식으로 추가 등록 가능
+_AUG_MAP = {
+  "RandomCrop": lambda **p: transforms.RandomCrop(p["size"], padding=p.get("padding", 0)),
+  "RandomHorizontalFlip": lambda **p: transforms.RandomHorizontalFlip(p.get("p", 0.5)),
+  "RandAugment": lambda **p: transforms.RandAugment(num_ops=p.get("n",2), magnitude=p.get("m",9)),
+  "ToTensor": lambda **p: transforms.ToTensor(),
+  "Normalize": lambda **p: transforms.Normalize(p["mean"], p["std"]),
+}
+
+def build_transform(pipes: list):
+    ops = []
+    for spec in pipes:
+        name = spec.pop("name")
+        ops.append(_AUG_MAP[name](**spec))
+    return transforms.Compose(ops)
