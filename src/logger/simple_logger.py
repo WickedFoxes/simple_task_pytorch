@@ -20,21 +20,21 @@ class SimpleLogger(LoggerBase):
         metrics: {
             "train_loss": float,
             "train_acc": float,
-            "test_loss": float,
-            "test_acc": float,
+            "valid_loss": float,
+            "valid_acc": float,
             "lr": float
         }
         """
         # 최고 정확도 갱신 시 출력
-        if metrics["test_acc"] > self.best_acc:
+        if metrics["valid_acc"] > self.best_acc:
             self.best_acc = metrics["test_acc"]
             print(f"New best accuracy: {self.best_acc:.4f} at epoch {epoch}")
 
         # 로그 라인 출력
         print(
-            f"[{epoch:03d}/{self.max_epochs}] "
+            f"[Epoch{epoch:03d}] "
             f"train_loss={metrics['train_loss']:.4f} acc={metrics['train_acc']:.4f} | "
-            f"test_loss={metrics['test_loss']:.4f} acc={metrics['test_acc']:.4f} | "
+            f"valid_loss={metrics['valid_loss']:.4f} acc={metrics['valid_acc']:.4f} | "
             f"lr={metrics['lr']:.5f} | time={elapsed_time:.2f}s "
         )
 
