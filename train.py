@@ -13,6 +13,7 @@ import src.scheduler.scheduler
 import src.trainer
 import src.loss.loss
 import src.logger
+from src.hook.checkpoint_saver import CheckpointSaver
 
 # from src.engine.hooks import EarlyStopping
 
@@ -26,11 +27,7 @@ if __name__ == '__main__':
 
     # 1) 증강
     train_tf = build_transform(cfg.augment.train)
-    eval_tf  = build_transform(cfg.augment.eval)
-    print("#### train_tf ####")
-    print(train_tf)
-    print("#### eval_tf ####")
-    print(eval_tf)    
+    eval_tf  = build_transform(cfg.augment.eval)  
 
     # 2) 데이터로더
     print(cfg.dataset)
@@ -40,34 +37,24 @@ if __name__ == '__main__':
         eval_tf=eval_tf,
         cfg = cfg.dataset
     )
-    print("#### train_loader ####")
-    print(train_loader)
-    print("#### val_loader ####")
-    print(val_loader)
 
     # 3) 모델/옵티마이저/스케줄러
     model = build(
         "model", cfg.model.name, 
         **{k:v for k,v in cfg.model.items() if k!="name"}
     )
-    print("#### model ####")
-    print(model)
 
     optimizer = build(
         "optimizer", cfg.optimizer.name, 
         params=model.parameters(), 
         **{k:v for k,v in cfg.optimizer.items() if k!="name"}
     )
-    print("#### optimizer ####")
-    print(optimizer)
 
     scheduler = build(
         "scheduler", cfg.scheduler.name, 
         optimizer=optimizer, 
         **{k:v for k,v in cfg.scheduler.items() if k!="name"}
     )
-    print("#### scheduler ####")
-    print(scheduler)
 
 
     # 4) 로거
@@ -75,18 +62,15 @@ if __name__ == '__main__':
         "logger", cfg.logger.name, 
         **{k:v for k,v in cfg.logger.items() if k!="name"}
     )
-    print("#### logger ####")
-    print(logger)
 
 
     # 5) 트레이너
     trainer = build(
         "trainer", cfg.trainer.name, 
-        model=model, optimizer=optimizer, scheduler=scheduler, logger=logger, hooks=[],
+        model=model, optimizer=optimizer, scheduler=scheduler, logger=logger, 
+        hooks=[CheckpointSaver(**cfg.checkpoint_saver)],
         cfg=cfg.trainer
     )
-    print("#### trainer ####")
-    print(trainer)
     # trainer = Trainer(model, optimizer, scheduler, logger, hooks=[EarlyStopping(**cfg.train.early_stop)], cfg=cfg)
     
     # 6) 손실함수
@@ -96,7 +80,6 @@ if __name__ == '__main__':
     )
     print("#### criterion ####")
     print(criterion)
-    # criterion = nn.CrossEntropyLoss()
 
     device = cfg.device if torch.cuda.is_available() else "cpu"
     trainer.train(train_loader, val_loader, criterion, device)

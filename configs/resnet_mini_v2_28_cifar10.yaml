@@ -43,8 +43,8 @@ loss:
   name: "cross_entropy"
 
 logger:
-  name: "wandb"   # "wandb" 도 가능
-  project : "cifar10-image-classification"
+  name: "tqdm"   # "wandb" 도 가능
+  # project : "cifar10-image-classification"
 # log_dir: "./runs"
 
 trainer:
@@ -54,3 +54,8 @@ trainer:
   amp: true             # mixed precision
   val_interval: 1       # 에폭 단위 검증
   save_best: true
+
+checkpoint_saver:
+  save_dir: "checkpoints"
+  save_best: true
+  save_last: true

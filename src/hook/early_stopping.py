@@ -1,8 +1,4 @@
-class Hook:
-    def on_train_start(self, **kw): pass
-    def on_epoch_end(self, **kw): pass
-    def on_validation_end(self, **kw): pass
-    def on_train_end(self, **kw): pass
+from src.hook.base import Hook
 
 class EarlyStopping(Hook):
     def __init__(self, patience, mode="max"):

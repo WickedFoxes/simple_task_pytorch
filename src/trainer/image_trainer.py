@@ -43,13 +43,22 @@ class ImageTrainer:
             self.logger.log_metrics({"val/acc": val_acc, "val/loss": val_loss, "epoch": epoch}, step=global_step)
 
             for h in self.hooks:
-                h.on_validation_end(metric=val_acc, epoch=epoch)
+                h.on_validation_end(
+                    metric=val_loss, 
+                    epoch=epoch,
+                    model=self.model,
+                    optimizer=self.opt,
+                    scheduler=self.sched,
+                    logger=self.logger,
+                )
+
 
             # 조기 종료
             if any(getattr(h, "should_stop", False) for h in self.hooks):
                 break
 
-            for h in self.hooks: h.on_epoch_end(epoch=epoch)
+            for h in self.hooks: 
+                h.on_epoch_end(epoch=epoch)
 
         for h in self.hooks: h.on_train_end()
 
