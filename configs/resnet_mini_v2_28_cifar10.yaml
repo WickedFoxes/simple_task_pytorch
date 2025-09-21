@@ -19,7 +19,7 @@ optimizer:
 
 scheduler:
   name: "cosine"
-  max_epochs: 20
+  max_epochs: 50
   min_lr: 1e-6
 
 augment:
@@ -28,34 +28,25 @@ augment:
     - {name: "RandomHorizontalFlip", p: 0.5}
     - {name: "RandAugment", n: 2, m: 9}
     - {name: "ToTensor", }
-    - {name: "Normalize", mean: [0.491,0.482,0.447], std: [0.247,0.243,0.262]}
+    - {name: "Normalize", mean: [0.491,0.482,0.447], std: [0.247,0.243,0.262]} # cifar10
   eval:
     - {name: "ToTensor", }
-    - {name: "Normalize", mean: [0.491,0.482,0.447], std: [0.247,0.243,0.262]}
-  # batch_train:
-  #   name: "mixcut"          # "mixup" | "cutmix" | "mixcut"
-  #   mixup_alpha: 0.2
-  #   cutmix_alpha: 1.0
-  #   p: 1.0                  # 적용 확률
-  #   switch_prob: 0.5        # mixup/cutmix 중 선택 확률 (mixcut일 때 사용)
+    - {name: "Normalize", mean: [0.491,0.482,0.447], std: [0.247,0.243,0.262]} # cifar10
 
 loss:
   name: "cross_entropy"
 
 logger:
-  name: "simple"   # "wandb" 도 가능
-  # project : "cifar10-image-classification"
-  # log_dir: "./runs"
+  name: "simple"
 
 trainer:
-  name : "image_trainer"
-  epochs: 5
+  name : "image_classifier_trainer"
+  epochs: 50
   grad_clip: 1.0
   amp: true             # mixed precision
   val_interval: 1       # 에폭 단위 검증
-  save_best: true
 
 checkpoint_saver:
-  save_dir: "checkpoints"
+  save_dir: "checkpoints/resnet_mini_v2_28"
   save_best: true
   save_last: false

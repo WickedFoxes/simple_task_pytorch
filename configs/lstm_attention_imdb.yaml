@@ -1,0 +1,48 @@
+seed: 42
+device: "cuda"
+
+dataset:
+  name: "imdb"
+  root: "./data"
+  num_workers: 8
+  batch_size: 128
+  pin_memory: true
+
+model:
+  name: "lstm_attention_classifier"
+  vocab_size: 30522 # bert-base-uncased의 vocab_size
+  embed_dim: 300
+  hidden_dim: 256
+  num_layers: 2
+  bidirectional: True
+  dropout: 0.5
+  num_classes: 2
+
+optimizer:
+  name: "adamw"
+  lr: 0.001
+  weight_decay: 0.001
+
+scheduler:
+  name: "cosine"
+  max_epochs: 5 # trainer의 epochs와 동일하게 설정
+  min_lr: 1e-6
+
+loss:
+  name: "cross_entropy"
+
+logger:
+  name: "simple"
+
+trainer:
+  name : "text_classifier_trainer"
+  epochs: 5
+  grad_clip: 1.0
+  amp: true             # mixed precision
+  val_interval: 1       # 에폭 단위 검증
+  save_best: true
+
+checkpoint_saver:
+  save_dir: "checkpoints/lstm_attention_classifier"
+  save_best: true
+  save_last: false

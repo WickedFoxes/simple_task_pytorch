@@ -1,1 +1,2 @@
-from src.trainer.image_trainer import ImageTrainer
+from trainer.image_classifer_trainer import ImageClassifierTrainer
+from trainer.text_classifer_trainer import TextClassifierTrainer

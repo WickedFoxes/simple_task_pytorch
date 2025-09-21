@@ -1,7 +1,7 @@
 from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
 from src.registry import register
-from .base import DatasetBase
+from src.datasets.base import DatasetBase
 from typing import Optional, Callable, Dict, Any
 
 

@@ -70,8 +70,7 @@ if __name__ == '__main__':
         hooks=[CheckpointSaver(**cfg.checkpoint_saver)],
         cfg=cfg.trainer
     )
-    # trainer = Trainer(model, optimizer, scheduler, logger, hooks=[EarlyStopping(**cfg.train.early_stop)], cfg=cfg)
-    
+        
     # 6) 손실함수
     criterion = build(
         "loss", cfg.loss.name, 

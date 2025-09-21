@@ -9,18 +9,10 @@ class SimpleLogger(LoggerBase):
         self.metrics_history = []
         self.params = {}
 
-    # def log_metrics(self, metrics: dict, step: int = None):
-    #     """메트릭을 로그에 출력"""
-    #     if step is not None:
-    #         print(f"[Metrics][Step {step}] {metrics}")
-    #     else:
-    #         print(f"[Metrics] {metrics}")
-    #     self.metrics_history.append((step, metrics))
-
     def log_metrics(self, metrics: dict, step: int = None):
         """메트릭을 로그에 출력"""
         formatted = " | ".join(
-            f"{k}={v:.4f}" if isinstance(v, float) else f"{k}={v}"
+            f"{k}={v:11.6f}" if isinstance(v, float) else f"{k}={v}"
             for k, v in metrics.items()
         )
         formatted = f"| {formatted} |"
