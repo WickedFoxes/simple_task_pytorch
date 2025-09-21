@@ -75,7 +75,7 @@ class ImageClassifierTrainer:
             for h in self.hooks:
                 if hasattr(h, "on_validation_end"):
                     h.on_validation_end(
-                        metric=val_loss,
+                        metric=val_acc,
                         epoch=epoch,
                         model=self.model,
                         optimizer=self.opt,
@@ -93,7 +93,7 @@ class ImageClassifierTrainer:
 
         for h in self.hooks:
             if hasattr(h, "on_train_end"):
-                h.on_train_end()
+                h.on_train_end(self.model, self.opt, self.sched, epoch)
         
         if hasattr(self.logger, "finalize"):
             self.logger.finalize(status="success")

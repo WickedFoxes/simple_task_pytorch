@@ -77,7 +77,7 @@ class TextClassifierTrainer:
             for h in self.hooks:
                 if hasattr(h, "on_validation_end"):
                     h.on_validation_end(
-                        metric=val_loss,
+                        metric=val_acc,
                         epoch=epoch,
                         model=self.model,
                         optimizer=self.opt,
