@@ -95,7 +95,7 @@ class TextClassifierTrainer:
 
         for h in self.hooks:
             if hasattr(h, "on_train_end"):
-                h.on_train_end()
+                h.on_train_end(self.model, self.opt, self.sched, epoch)
         
         if hasattr(self.logger, "finalize"):
             self.logger.finalize(status="success")
