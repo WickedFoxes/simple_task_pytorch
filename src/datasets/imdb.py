@@ -50,7 +50,7 @@ class IMDBWrap(DatasetBase):
     """
     def __init__(
         self,
-        data_dir: str = "./data",
+        root: str = "./data",
         tokenizer=None,
         max_len: int = 256,
         train: bool = True,
@@ -61,9 +61,9 @@ class IMDBWrap(DatasetBase):
         self.max_len = max_len
         # ReviewDataset은 (dataset_split, tokenizer, max_len) 시그니처로 가정
         if train:
-            data = load_from_disk(os.path.join(data_dir, "train"))
+            data = load_from_disk(os.path.join(root, "train"))
         else:
-            data = load_from_disk(os.path.join(data_dir, "test"))
+            data = load_from_disk(os.path.join(root, "test"))
         self.dataset = ReviewDataset(data, tokenizer, max_len)
 
     def __len__(self):
@@ -81,7 +81,7 @@ class IMDBWrap(DatasetBase):
         train: bool = True,
     ):
         return cls(
-            data_dir=cfg.get("data_dir", "./data"),
+            root=cfg.get("root", "./data"),
             tokenizer=tokenizer,
             max_len=int(cfg.get("max_len", 256)),
             train=train,

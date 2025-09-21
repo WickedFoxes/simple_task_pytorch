@@ -3,7 +3,7 @@ device: "cuda"
 
 dataset:
   name: "cifar10"
-  root: "./data"
+  root: "./data/cifar10"
   num_workers: 8
   batch_size: 128
   pin_memory: true
