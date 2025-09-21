@@ -11,6 +11,7 @@ dataset:
 model:
   name: "lstm_attention_classifier"
   vocab_size: 30522 # bert-base-uncased의 vocab_size
+  pad_idx: 0 # bert-base-uncased의 pad_idx
   embed_dim: 300
   hidden_dim: 256
   num_layers: 2
