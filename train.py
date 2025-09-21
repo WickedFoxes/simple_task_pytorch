@@ -26,8 +26,8 @@ if __name__ == '__main__':
     set_seed(cfg.seed)
 
     # 1) 증강
-    train_tf = build_transform(getattr(getattr(cfg, "augment", None), "train", None))
-    eval_tf  = build_transform(getattr(getattr(cfg, "augment", None), "eval", None)) 
+    train_tf = build_transform(getattr(getattr(cfg, "augment", None), "train", []))
+    eval_tf  = build_transform(getattr(getattr(cfg, "augment", None), "eval", [])) 
 
     # 2) 데이터로더
     train_loader, val_loader = build(
