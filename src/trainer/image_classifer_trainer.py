@@ -9,7 +9,7 @@ class ImageClassifierTrainer:
     def __init__(self, model, optimizer, scheduler, logger, hooks=[], cfg=None):
         self.model = model; self.opt = optimizer; self.sched = scheduler
         self.logger = logger; self.hooks = hooks; self.cfg = cfg or {}
-        self.scaler = GradScaler(enabled=self.cfg.get("amp", False))
+        self.scaler = GradScaler(enabled=self.cfg.get("amp", True))
 
 
     def train(self, train_loader, val_loader, criterion, device):
@@ -94,9 +94,6 @@ class ImageClassifierTrainer:
         for h in self.hooks:
             if hasattr(h, "on_train_end"):
                 h.on_train_end(self.model, self.opt, self.sched, epoch)
-        
-        if hasattr(self.logger, "finalize"):
-            self.logger.finalize(status="success")
 
     @torch.no_grad()
     def evaluate(self, model, loader, device, criterion):

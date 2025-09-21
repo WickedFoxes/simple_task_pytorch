@@ -80,4 +80,4 @@ if __name__ == '__main__':
     device = cfg.device if torch.cuda.is_available() else "cpu"
     trainer.train(train_loader, val_loader, criterion, device)
 
-    logger.finalize()
+    logger.finalize(status="success")
