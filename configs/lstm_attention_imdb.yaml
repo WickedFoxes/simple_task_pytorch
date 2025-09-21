@@ -3,7 +3,7 @@ device: "cuda"
 
 dataset:
   name: "imdb"
-  root: "./data"
+  root: "./data/imdb"
   num_workers: 8
   batch_size: 128
   pin_memory: true
