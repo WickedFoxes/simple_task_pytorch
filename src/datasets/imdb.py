@@ -108,7 +108,7 @@ def _make_imdb_collate_fn(tokenizer):
     return collate_fn
 
 @register("dataset", "imdb")
-def build_imdb_dataloaders(cfg: Dict[str, Any]) -> Tuple[DataLoader, DataLoader]:
+def build_imdb_dataloaders(cfg: Dict[str, Any], **kwargs) -> Tuple[DataLoader, DataLoader]:
     tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
     train_set = IMDBWrap.from_config(cfg, tokenizer=tokenizer, train=True)
     val_set   = IMDBWrap.from_config(cfg, tokenizer=tokenizer, train=False)
