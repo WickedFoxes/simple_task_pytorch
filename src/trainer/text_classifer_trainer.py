@@ -14,6 +14,10 @@ class TextClassifierTrainer:
 
     def train(self, train_loader, val_loader, criterion, device):
         self.model.to(device)
+
+        total_params = sum(p.numel() for p in self.model.parameters())
+        self.logger.log_params({"total_params": total_params})
+
         for h in self.hooks:
             if hasattr(h, "on_train_start"):
                 h.on_train_start()
