@@ -1,1 +1,1 @@
-from trainer.classifer_trainer import ClassifierTrainer
+from src.trainer.classifer_trainer import ClassifierTrainer
