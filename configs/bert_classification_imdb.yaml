@@ -4,7 +4,7 @@ device: "cuda"
 dataset:
   name: "imdb"
   root: "./data/imdb"
-  pretrained_tokenizer_name: "bert-base-uncased"
+  pretrained_tokenizer_name: "google-bert/bert-base-cased"
   num_workers: 8
   batch_size: 32
   pin_memory: true
@@ -14,10 +14,9 @@ model:
   name: "bert_classifier"
   num_classes: 2
   pad_idx: 0 # tokenizer의 pad_idx
-  pretrained: true
   pooling: "cls" # cls or mean
   dropout: 0.1
-  pretrained_model_name: "bert-base-uncased"
+  pretrained_model_name: "google-bert/bert-base-cased"
 
 optimizer:
   name: "adamw"
@@ -25,7 +24,7 @@ optimizer:
   weight_decay: 0.01
 
 scheduler:
-  name: "cosine_warmup"
+  name: "cosine"
   max_epochs: 5 # trainer의 epochs와 동일하게 설정
   min_lr: 1e-6
   warmup_epochs: 1

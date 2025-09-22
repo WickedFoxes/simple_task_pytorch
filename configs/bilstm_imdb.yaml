@@ -52,4 +52,4 @@ checkpoint_saver:
   save_last: false
 
 early_stop:
-  patience: 5
+  patience: 10
