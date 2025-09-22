@@ -39,7 +39,7 @@ class IMDBWrap(DatasetBase):
             self.ds = load_from_disk(os.path.join(root, "test"))
 
     def __len__(self):
-        return len(self.dataset)
+        return len(self.ds["text"])
 
     def __getitem__(self, idx):
         text = self.ds["text"][idx]
