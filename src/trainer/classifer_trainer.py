@@ -4,8 +4,8 @@ import torch
 from torch.cuda.amp import autocast, GradScaler
 from src.registry import register
 
-@register("trainer", "image_classifier_trainer")
-class ImageClassifierTrainer:
+@register("trainer", "classifier_trainer")
+class ClassifierTrainer:
     def __init__(self, model, optimizer, scheduler, logger, hooks=[], cfg=None):
         self.model = model; self.opt = optimizer; self.sched = scheduler
         self.logger = logger; self.hooks = hooks; self.cfg = cfg or {}
@@ -28,13 +28,14 @@ class ImageClassifierTrainer:
             epoch_start = time.time()
             train_loss, train_acc, n = 0.0, 0.0, 0
             
-            for xb, yb in train_loader:
-                xb, yb = xb.to(device), yb.to(device)
+            for inputs, labels in train_loader:
+                inputs = inputs.to(device)
+                labels    = labels.to(device)
                 
                 self.opt.zero_grad(set_to_none=True)
                 with autocast(enabled=self.cfg["amp"]):
-                    logits = self.model(xb)
-                    loss = criterion(logits, yb)
+                    logits = self.model(inputs)
+                    loss = criterion(logits, labels)
                 
                 self.scaler.scale(loss).backward()
 
@@ -47,9 +48,9 @@ class ImageClassifierTrainer:
                 if self.sched and hasattr(self.sched, "step") and not isinstance(self.sched, torch.optim.lr_scheduler.CosineAnnealingLR):
                     self.sched.step()  # 스텝 단위 스케줄러일 경우
 
-                train_loss += loss.item() * xb.size(0)
-                train_acc  += self.accuracy(logits, yb) * xb.size(0)
-                n += xb.size(0)
+                train_loss += loss.item() * labels.size(0)
+                train_acc  += self.accuracy(logits, labels) * labels.size(0)
+                n += labels.size(0)
 
             train_loss /= n; train_acc /= n
             current_lr = self.opt.param_groups[0]["lr"]
@@ -103,14 +104,14 @@ class ImageClassifierTrainer:
     def evaluate(self, model, loader, device, criterion):
         model.eval()
         total_loss, total_acc, n = 0.0, 0.0, 0
-        for images, targets in loader:
-            images = images.to(device, non_blocking=True)
-            targets = targets.to(device, non_blocking=True)
-            logits = model(images)
-            loss = criterion(logits, targets)
-            bs = images.size(0)
+        for inputs, labels in loader:
+            inputs = inputs.to(device)
+            labels    = labels.to(device)
+            logits = model(inputs)
+            loss = criterion(logits, labels)
+            bs = labels.size(0)
             total_loss += loss.item() * bs
-            total_acc  += self.accuracy(logits, targets) * bs
+            total_acc  += self.accuracy(logits, labels) * bs
             n += bs
         return total_loss / n, total_acc / n
 

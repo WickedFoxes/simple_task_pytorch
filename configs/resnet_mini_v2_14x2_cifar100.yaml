@@ -40,7 +40,7 @@ logger:
   name: "simple"
 
 trainer:
-  name : "image_classifier_trainer"
+  name : "classifier_trainer"
   epochs: 50
   grad_clip: 1.0
   amp: true             # mixed precision

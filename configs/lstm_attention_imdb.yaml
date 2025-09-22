@@ -8,6 +8,7 @@ dataset:
   num_workers: 8
   batch_size: 32
   pin_memory: true
+  max_len: 400
 
 model:
   name: "lstm_attention_classifier"
@@ -37,7 +38,7 @@ logger:
   name: "simple"
 
 trainer:
-  name : "text_classifier_trainer"
+  name : "classifier_trainer"
   epochs: 10
   grad_clip: 1.0
   amp: true             # mixed precision
