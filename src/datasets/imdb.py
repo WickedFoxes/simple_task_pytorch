@@ -53,7 +53,7 @@ class IMDBWrap(DatasetBase):
             truncation=True
         )
         token_ids = torch.tensor(encoded["input_ids"], dtype=torch.long) # 다중클래스를 위한 정수 타입
-        label = torch.tensor(self.labels[idx], dtype=torch.long)
+        label = torch.tensor(label, dtype=torch.long)
         return token_ids, label
 
     @classmethod
