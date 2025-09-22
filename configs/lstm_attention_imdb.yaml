@@ -6,7 +6,7 @@ dataset:
   root: "./data/imdb"
   pretrained_tokenizer_name: "bert-base-uncased"
   num_workers: 8
-  batch_size: 128
+  batch_size: 32
   pin_memory: true
 
 model:
@@ -27,7 +27,7 @@ optimizer:
 
 scheduler:
   name: "cosine"
-  max_epochs: 20 # trainer의 epochs와 동일하게 설정
+  max_epochs: 10 # trainer의 epochs와 동일하게 설정
   min_lr: 1e-6
 
 loss:
@@ -38,7 +38,7 @@ logger:
 
 trainer:
   name : "text_classifier_trainer"
-  epochs: 20
+  epochs: 10
   grad_clip: 1.0
   amp: true             # mixed precision
   val_interval: 1       # 에폭 단위 검증

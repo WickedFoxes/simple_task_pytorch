@@ -8,7 +8,7 @@ from src.models.base import ModelBase
 from transformers import BertModel, BertConfig
 
 @register("model", "bert_classifier")
-class BertClassifier(nn.Module):
+class BertClassifier(ModelBase):
     def __init__(
             self, 
             num_classes: int=2, 
