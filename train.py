@@ -14,6 +14,7 @@ import src.trainer
 import src.loss.loss
 import src.logger
 from src.hook.checkpoint_saver import CheckpointSaver
+from src.hook.early_stopping import EarlyStopping
 
 # from src.engine.hooks import EarlyStopping
 
@@ -62,12 +63,16 @@ if __name__ == '__main__':
         **{k:v for k,v in cfg.logger.items() if k!="name"}
     )
 
+    
+    hooks = [CheckpointSaver(**cfg.checkpoint_saver)]
+    if hasattr(cfg, "early_stop"):
+        hooks.append(EarlyStopping(**cfg.early_stop))
 
     # 5) 트레이너
     trainer = build(
         "trainer", cfg.trainer.name, 
         model=model, optimizer=optimizer, scheduler=scheduler, logger=logger, 
-        hooks=[CheckpointSaver(**cfg.checkpoint_saver)],
+        hooks=[hooks],
         cfg=cfg.trainer
     )
         

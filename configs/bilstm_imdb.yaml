@@ -6,29 +6,31 @@ dataset:
   root: "./data/imdb"
   pretrained_tokenizer_name: "bert-base-uncased"
   num_workers: 8
-  batch_size: 32
+  batch_size: 64
   pin_memory: true
   max_len: 400
 
 model:
-  name: "bert_classifier"
-  num_classes: 2
+  name: "lstm_classifier"
+  vocab_size: 30522 # tokenizer의 vocab_size
   pad_idx: 0 # tokenizer의 pad_idx
-  pretrained: true
-  pooling: "cls" # cls or mean
-  dropout: 0.1
-  pretrained_model_name: "bert-base-uncased"
+  embed_dim: 100
+  hidden_dim: 256
+  num_layers: 2
+  bidirectional: True
+  dropout: 0.5
+  num_classes: 2
 
 optimizer:
-  name: "adamw"
-  lr: 3e-5
-  weight_decay: 0.01
+  name: "adam"
+  lr: 0.001
+  weight_decay: 0.0001
 
 scheduler:
-  name: "cosine_warmup"
-  max_epochs: 5 # trainer의 epochs와 동일하게 설정
-  min_lr: 1e-6
-  warmup_epochs: 1
+  name: "reduce_lr_on_plateau"
+  mode: "min"
+  factor: 0.1
+  patience: 3
 
 loss:
   name: "cross_entropy"
@@ -38,14 +40,14 @@ logger:
 
 trainer:
   name : "classifier_trainer"
-  epochs: 5
+  epochs: 20
   grad_clip: 1.0
   amp: true             # mixed precision
   val_interval: 1       # 에폭 단위 검증
   save_best: true
 
 checkpoint_saver:
-  save_dir: "checkpoints/bert_classifier"
+  save_dir: "checkpoints/lstm_attention_classifier"
   save_best: true
   save_last: false
 
