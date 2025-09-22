@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import (
     SequentialLR,
     ReduceLROnPlateau,
 )
-from transformers import get_cosine_schedule_with_warmup
+from transformers import get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup
 from src.registry import register
 
 @register("scheduler", "cosine")
@@ -27,6 +27,14 @@ def onecycle(optimizer, max_lr, steps_per_epoch, epochs, pct_start=0.3):
 @register("scheduler", "cosine_warm_restarts")
 def cosine_warm_restarts(optimizer, first_cycle_steps, cycle_mult=1, min_lr=1e-6):
     return CosineAnnealingWarmRestarts(optimizer, T_0=first_cycle_steps, T_mult=cycle_mult, eta_min=min_lr)
+
+@register("scheduler", "linear_schedule_with_warmup")
+def linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps):
+    return get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps)
+
+@register("scheduler", "cosine_schedule_with_warmup")
+def cosine_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, num_cycles=7):
+    return get_cosine_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, num_cycles)
 
 
 @register("scheduler", "reduce_lr_on_plateau")

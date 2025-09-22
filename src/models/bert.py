@@ -13,14 +13,20 @@ class BertClassifier(ModelBase):
             self, 
             num_classes: int=2, 
             pad_idx: int = 0,
+            pretrained: bool = True, 
             pooling: str = "cls",
             dropout:float=0.1,
-            pretrained_model_name: str = "google-bert/bert-base-cased",
+            pretrained_model_name: str = "bert-base-uncased",
         ):
         super(BertClassifier, self).__init__()
-        # 사전학습된 BERT 불러오기
-        config = AutoConfig.from_pretrained(pretrained_model_name)
-        self.bert = AutoModel.from_config(config)
+        if pretrained:
+            # 사전학습된 BERT 불러오기
+            self.bert = AutoModel.from_pretrained(pretrained_model_name)
+
+        else:
+            # 랜덤 초기화된 BERT (사전학습 가중치 X)
+            config = AutoConfig.from_pretrained(pretrained_model_name)
+            self.bert = AutoModel.from_config(config)
 
         self.pooling = pooling.lower()
         self.pad_idx = pad_idx
