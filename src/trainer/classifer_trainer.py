@@ -30,7 +30,8 @@ class ClassifierTrainer:
             
             for inputs, labels in train_loader:
                 inputs = inputs.to(device)
-                labels    = labels.to(device)
+                labels = labels.to(device)
+                batch_size = labels.size(0)
                 
                 self.opt.zero_grad(set_to_none=True)
                 with autocast(enabled=self.cfg["amp"]):
@@ -42,26 +43,44 @@ class ClassifierTrainer:
                 if self.cfg["grad_clip"] is not None:
                     self.scaler.unscale_(self.opt)
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.cfg["grad_clip"])
+                
                 self.scaler.step(self.opt)
                 self.scaler.update()
-
-                if self.sched and hasattr(self.sched, "step") and not isinstance(self.sched, torch.optim.lr_scheduler.CosineAnnealingLR):
-                    self.sched.step()  # 스텝 단위 스케줄러일 경우
-
-                train_loss += loss.item() * labels.size(0)
-                train_acc  += self.accuracy(logits, labels) * labels.size(0)
-                n += labels.size(0)
+                
+                # 스텝 단위 스케줄러일 경우
+                if self.sched and hasattr(self.sched, "step"):
+                    if isinstance(self.sched, torch.optim.lr_scheduler.OneCycleLR):
+                        self.sched.step()
+                    elif not isinstance(self.sched, (
+                            torch.optim.lr_scheduler.ReduceLROnPlateau, 
+                            torch.optim.lr_scheduler.CosineAnnealingLR, 
+                            torch.optim.lr_scheduler.CosineAnnealingWarmRestarts
+                    )):
+                        self.sched.step() 
+                
+                train_loss += loss.item() * batch_size
+                train_acc  += self.accuracy(logits, labels) * batch_size
+                n += batch_size
 
             train_loss /= n; train_acc /= n
             current_lr = self.opt.param_groups[0]["lr"]
 
-
-            # 에폭 단위 스케줄러일 경우
-            if self.sched and isinstance(self.sched, torch.optim.lr_scheduler.CosineAnnealingLR):
-                self.sched.step()
-
             # 검증
             val_loss, val_acc  = self.evaluate(self.model, val_loader, device, criterion)
+
+            # 에폭 단위 스케줄러일 경우
+            if self.sched:
+                if isinstance(self.sched, (
+                    torch.optim.lr_scheduler.CosineAnnealingLR,
+                    torch.optim.lr_scheduler.CosineAnnealingWarmRestarts
+                )):
+                    self.sched.step()
+                elif isinstance(self.sched, (
+                    torch.optim.lr_scheduler.ReduceLROnPlateau
+                )):
+                    self.sched.step(val_loss)
+
+            
             elapsed = time.time() - epoch_start
 
             if hasattr(self.logger, "log_metrics"):
