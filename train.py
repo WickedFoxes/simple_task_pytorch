@@ -72,7 +72,7 @@ if __name__ == '__main__':
     trainer = build(
         "trainer", cfg.trainer.name, 
         model=model, optimizer=optimizer, scheduler=scheduler, logger=logger, 
-        hooks=[hooks],
+        hooks=hooks,
         cfg=cfg.trainer
     )
         
