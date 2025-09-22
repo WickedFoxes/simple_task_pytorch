@@ -72,7 +72,7 @@ class IMDBWrap(DatasetBase):
 
 def _make_imdb_collate_fn(pad_id):
     def collate_fn(batch):
-        ids_list, labels = [], [], []
+        ids_list, labels = [], []
         for ids, label in batch:
             ids_list.append(ids)
             labels.append(label)
