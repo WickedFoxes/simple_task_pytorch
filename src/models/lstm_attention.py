@@ -8,8 +8,19 @@ from src.models.base import ModelBase
 
 @register("model", "lstm_attention_classifier")
 class LSTMAttentionClassifier(ModelBase):
-    def __init__(self, vocab_size, embed_dim, hidden_dim, num_layers, bidirectional, dropout, pad_idx, num_classes=2):
+    def __init__(
+            self, 
+            vocab_size, 
+            embed_dim, 
+            hidden_dim, 
+            num_layers, 
+            bidirectional, 
+            dropout, 
+            pad_idx, 
+            num_classes=2
+        ):
         super().__init__()
+        self.pad_idx = pad_idx
         self.bidirectional = bidirectional
         self.embedding = nn.Embedding(vocab_size, embed_dim, padding_idx=pad_idx)
         
@@ -43,10 +54,15 @@ class LSTMAttentionClassifier(ModelBase):
         nn.init.xavier_uniform_(self.attention_layer[0].weight)
         nn.init.xavier_uniform_(self.attention_query)
 
-    def forward(self, input_ids, lengths):
+    def forward(
+            self, 
+            input_ids, 
+            **kwargs
+        ):
         # input_ids: [B, T], lengths: [B]
         emb = self.dropout(self.embedding(input_ids))  # [B, T, E]
-        
+        lengths = (input_ids != self.pad_idx).sum(dim=1)
+
         # 패딩된 시퀀스를 압축
         packed = pack_padded_sequence(emb, lengths.cpu(), batch_first=True, enforce_sorted=False)
         

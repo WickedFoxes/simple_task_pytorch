@@ -16,31 +16,6 @@ def clean_text(text: str) -> str:
     text = text.replace("\n", " ").replace("\r", " ")
     text = re.sub(r"\s+", " ", text).strip()
     return text
-
-class ReviewDataset(Dataset):
-    def __init__(self, dataset, tokenizer, max_len=256):
-        self.texts = dataset['text']
-        self.labels = dataset['label']
-        self.tokenizer = tokenizer
-        self.max_len = max_len
-
-    def __len__(self):
-        return len(self.labels)
-
-    def __getitem__(self, idx):
-        text = self.texts[idx]
-        encoded = self.tokenizer(
-            clean_text(text),
-            add_special_tokens=True,
-            max_length=self.max_len,
-            padding="max_length",   # LSTM 입력을 동일 길이로 맞춤
-            truncation=True
-        )
-        token_ids = torch.tensor(encoded["input_ids"], dtype=torch.long) # 다중클래스를 위한 정수 타입
-        # 길이 (pad 제외)
-        length = sum(1 for t in encoded["input_ids"] if t != self.tokenizer.pad_token_id)
-        label = torch.tensor(self.labels[idx], dtype=torch.long)
-        return token_ids, length, label
     
 
 class IMDBWrap(DatasetBase):
@@ -56,22 +31,30 @@ class IMDBWrap(DatasetBase):
         train: bool = True,
     ):
         super().__init__()
-        # load HF dataset (train split만 저장되어 있다고 가정)
         self.tokenizer = tokenizer
         self.max_len = max_len
-        # ReviewDataset은 (dataset_split, tokenizer, max_len) 시그니처로 가정
         if train:
-            data = load_from_disk(os.path.join(root, "train"))
+            self.ds = load_from_disk(os.path.join(root, "train"))
         else:
-            data = load_from_disk(os.path.join(root, "test"))
-        self.dataset = ReviewDataset(data, tokenizer, max_len)
+            self.ds = load_from_disk(os.path.join(root, "test"))
 
     def __len__(self):
         return len(self.dataset)
 
     def __getitem__(self, idx):
-        # ReviewDataset이 (ids_tensor, length_int, label_tensor) 튜플을 반환한다고 가정
-        return self.dataset[idx]
+        text = self.ds["text"][idx]
+        label = self.ds["label"][idx]
+
+        encoded = self.tokenizer(
+            clean_text(text),
+            add_special_tokens=True,
+            max_length=self.max_len,
+            padding="max_length",   # LSTM 입력을 동일 길이로 맞춤
+            truncation=True
+        )
+        token_ids = torch.tensor(encoded["input_ids"], dtype=torch.long) # 다중클래스를 위한 정수 타입
+        label = torch.tensor(self.labels[idx], dtype=torch.long)
+        return token_ids, label
 
     @classmethod
     def from_config(
@@ -87,24 +70,16 @@ class IMDBWrap(DatasetBase):
             train=train,
         )
 
-def _make_imdb_collate_fn(tokenizer):
-    # pad token id 결정: 우선 tokenizer.pad_token_id, 없으면 vocab의 [PAD], 그마저도 없으면 0
-    pad_id = getattr(tokenizer, "pad_token_id", None)
-    if pad_id is None:
-        pad_id = tokenizer.get_vocab().get("[PAD]", 0)
-
+def _make_imdb_collate_fn(pad_id):
     def collate_fn(batch):
-        ids_list, lengths, labels = [], [], []
-        for ids, length, label in batch:
+        ids_list, labels = [], [], []
+        for ids, label in batch:
             ids_list.append(ids)
-            lengths.append(length)
             labels.append(label)
 
         padded = pad_sequence(ids_list, batch_first=True, padding_value=pad_id)
-        lengths = torch.tensor(lengths, dtype=torch.long)
         labels = torch.stack(labels) if isinstance(labels[0], torch.Tensor) else torch.tensor(labels, dtype=torch.long)
-        return padded, lengths, labels
-
+        return padded, labels
     return collate_fn
 
 @register("dataset", "imdb")
@@ -113,7 +88,11 @@ def build_imdb_dataloaders(cfg: Dict[str, Any], **kwargs) -> Tuple[DataLoader, D
     train_set = IMDBWrap.from_config(cfg, tokenizer=tokenizer, train=True)
     val_set   = IMDBWrap.from_config(cfg, tokenizer=tokenizer, train=False)
 
-    collate_fn = _make_imdb_collate_fn(tokenizer)
+    pad_id = getattr(tokenizer, "pad_token_id", None)
+    if pad_id is None:
+        pad_id = tokenizer.get_vocab().get("[PAD]", 0)
+
+    collate_fn = _make_imdb_collate_fn(pad_id)
 
     train_loader = DataLoader(
         train_set,

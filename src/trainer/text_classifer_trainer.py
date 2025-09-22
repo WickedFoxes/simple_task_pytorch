@@ -28,14 +28,13 @@ class TextClassifierTrainer:
             epoch_start = time.time()
             train_loss, train_acc, n = 0.0, 0.0, 0
             
-            for input_ids, lengths, labels in train_loader:
+            for input_ids, labels in train_loader:
                 input_ids = input_ids.to(device)
-                lengths   = lengths.to(device)
                 labels    = labels.to(device)
                 
                 self.opt.zero_grad(set_to_none=True)
                 with autocast(enabled=self.cfg["amp"]):
-                    logits = self.model(input_ids, lengths)
+                    logits = self.model(input_ids)
                     loss = criterion(logits, labels)
                 
                 self.scaler.scale(loss).backward()
@@ -105,11 +104,10 @@ class TextClassifierTrainer:
     def evaluate(self, model, loader, device, criterion):
         model.eval()
         total_loss, total_acc, n = 0.0, 0.0, 0
-        for input_ids, lengths, labels in loader:
+        for input_ids, labels in loader:
             input_ids = input_ids.to(device)
-            lengths   = lengths.to(device)
             labels    = labels.to(device)
-            logits = model(input_ids, lengths)
+            logits = model(input_ids)
             loss = criterion(logits, labels)
             bs = labels.size(0)
             total_loss += loss.item() * bs

@@ -12,6 +12,7 @@ class BertClassifier(ModelBase):
     def __init__(
             self, 
             num_classes: int=2, 
+            pad_idx: int = 0,
             pretrained: bool = True, 
             pooling: str = "cls",
             dropout:float=0.1,
@@ -27,6 +28,7 @@ class BertClassifier(ModelBase):
             self.bert = BertModel(config)
 
         self.pooling = pooling.lower()
+        self.pad_idx = pad_idx
 
         # BERT hidden size -- D : 768
         bert_hidden_size = self.bert.config.hidden_size
@@ -60,16 +62,16 @@ class BertClassifier(ModelBase):
     def forward(
         self,
         input_ids: torch.Tensor,
-        attention_mask: torch.Tensor | None = None,
-        token_type_ids: torch.Tensor | None = None,
+        **kwargs
     ) -> torch.Tensor:
+        attention_mask = (input_ids != self.pad_idx).long()
+
         outputs = self.bert(
             input_ids=input_ids,
             attention_mask=attention_mask,
-            token_type_ids=token_type_ids,
         )
         last_hidden_state = outputs.last_hidden_state  # [B, L, H]
-
+        
         if self.pooling == "cls":
             pooled = self._cls_pool(last_hidden_state)
         else:  # "mean"
