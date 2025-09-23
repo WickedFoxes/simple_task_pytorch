@@ -247,3 +247,21 @@ class mobilenet_v3_large(MobileNetV3, ModelBase):
             [5,   6, 160, 1, 1, 1]
         ]
         super().__init__(cfgs=cfgs, mode='large', **kwargs)
+
+import torchvision
+@register("model", "mobilenet_v3_large_pretrained")
+class mobilenet_v3_large_pretrained(ModelBase):
+    def __init__(self, num_classes=100, **kwargs):
+        super().__init__(**kwargs)
+
+        # 사전학습된 MobileNetV3-Large 불러오기
+        self.model = torchvision.models.mobilenet_v3_large(
+            weights=torchvision.models.MobileNet_V3_Large_Weights.IMAGENET1K_V2
+        )
+
+        # classifier (마지막 FC 레이어) 수정 가능
+        in_features = self.model.classifier[3].in_features
+        self.model.classifier[3] = nn.Linear(in_features, num_classes)
+
+    def forward(self, x):
+        return self.model(x)
