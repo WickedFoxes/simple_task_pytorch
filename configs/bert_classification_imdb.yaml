@@ -13,6 +13,7 @@ dataset:
 model:
   name: "bert_classifier"
   num_classes: 2
+  pretrained: true
   pad_idx: 0 # tokenizer의 pad_idx
   pooling: "cls" # cls or mean
   dropout: 0.1
