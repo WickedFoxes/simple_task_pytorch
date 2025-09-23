@@ -9,7 +9,7 @@ dataset:
   pin_memory: true
 
 model:
-  name: "mobilenet_v2_mini"
+  name: "mobilenet_v3_mini"
   num_classes: 100
 
 optimizer:
