@@ -24,7 +24,6 @@ scheduler:
 
 augment:
   train:
-    - {name: "Resize", size: 224}   # 추가된 부분
     - {name: "RandomCrop", size: 32, padding: 4}
     - {name: "RandomHorizontalFlip", p: 0.5}
     - {name: "RandAugment", n: 2, m: 9}
