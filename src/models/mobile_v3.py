@@ -190,14 +190,18 @@ class MobileNetV3(nn.Module):
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
                 m.weight.data.normal_(0, math.sqrt(2. / n))
-                if m.bias is not None:
+                if m.bias is not None:  # ✅ bias 존재 여부 확인
                     m.bias.data.zero_()
             elif isinstance(m, nn.BatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
+                if m.weight is not None:
+                    m.weight.data.fill_(1)
+                if m.bias is not None:
+                    m.bias.data.zero_()
             elif isinstance(m, nn.Linear):
                 m.weight.data.normal_(0, 0.01)
-                m.bias.data.zero_()
+                if m.bias is not None:  # ✅ 추가 확인
+                    m.bias.data.zero_()
+
 
 @register("model", "mobilenet_v3_small")
 class mobilenet_v3_small(MobileNetV3, ModelBase):
