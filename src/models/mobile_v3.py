@@ -143,7 +143,6 @@ def _make_divisible(
         new_v += divisor
     return new_v
 
-
 class MobileNetV3(nn.Module):
     def __init__(self, cfgs, mode, num_classes=100, width_mult=1.):
         super(MobileNetV3, self).__init__()
