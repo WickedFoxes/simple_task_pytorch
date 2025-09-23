@@ -199,8 +199,8 @@ class MobileNetV3(nn.Module):
                 m.weight.data.normal_(0, 0.01)
                 m.bias.data.zero_()
 
-@register("model", "mobilenet_v3_mini")
-class mobilenet_v3_mini(MobileNetV3, ModelBase):
+@register("model", "mobilenet_v3_small")
+class mobilenet_v3_small(MobileNetV3, ModelBase):
     def __init__(self, **kwargs):
         # Call the parent class's constructor with the fixed layers
         cfgs = [
@@ -218,3 +218,28 @@ class mobilenet_v3_mini(MobileNetV3, ModelBase):
             [5,    6,  96, 1, 1, 1],
         ]
         super().__init__(cfgs=cfgs, mode='small', **kwargs)
+
+
+@register("model", "mobilenet_v3_large")
+class mobilenet_v3_large(MobileNetV3, ModelBase):
+    def __init__(self, **kwargs):
+        # Call the parent class's constructor with the fixed layers
+        cfgs = [
+            # k, t, c, SE, HS, s 
+            # [3,   1,  16, 0, 0, 1],
+            # [3,   4,  24, 0, 0, 2],
+            # [3,   3,  24, 0, 0, 1],
+            # [5,   3,  40, 1, 0, 2],
+            [5,   3,  40, 1, 0, 1],
+            [5,   3,  40, 1, 0, 1],
+            [3,   6,  80, 0, 1, 2],
+            [3, 2.5,  80, 0, 1, 1],
+            [3, 2.3,  80, 0, 1, 1],
+            [3, 2.3,  80, 0, 1, 1],
+            [3,   6, 112, 1, 1, 1],
+            [3,   6, 112, 1, 1, 1],
+            [5,   6, 160, 1, 1, 2],
+            [5,   6, 160, 1, 1, 1],
+            [5,   6, 160, 1, 1, 1]
+        ]
+        super().__init__(cfgs=cfgs, mode='large', **kwargs)

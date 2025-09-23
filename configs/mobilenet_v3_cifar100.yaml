@@ -9,7 +9,7 @@ dataset:
   pin_memory: true
 
 model:
-  name: "mobilenet_v3_mini"
+  name: "mobilenet_v3_large"
   num_classes: 100
 
 optimizer:
@@ -47,6 +47,6 @@ trainer:
   val_interval: 1       # 에폭 단위 검증
 
 checkpoint_saver:
-  save_dir: "checkpoints/cifar100/mobilenet_v2_mini"
+  save_dir: "checkpoints/cifar100/mobilenet_v3_large"
   save_best: true
   save_last: false
