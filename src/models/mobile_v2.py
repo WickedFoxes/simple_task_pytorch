@@ -9,18 +9,6 @@ from src.registry import register
 from src.models.base import ModelBase
 import math
 
-
-def initialize_weights(module):
-    if isinstance(module, nn.Conv2d):
-        nn.init.kaiming_normal_(module.weight.data, mode='fan_out')
-    elif isinstance(module, nn.BatchNorm2d):
-        module.weight.data.fill_(1)
-        module.bias.data.zero_()
-    elif isinstance(module, nn.Linear):
-        if module.bias is not None:
-            module.bias.data.zero_()
-
-
 class SEBlock(nn.Module):
     def __init__(self, channel, reduction=16):
         super(SEBlock, self).__init__()
@@ -194,7 +182,7 @@ class MobileNetV2_mini(nn.Module):
                 m.weight.data.normal_(0, 0.01)
                 m.bias.data.zero_()
 
-@register("model", "se_resnet_mini_v2_28")
+@register("model", "mobilenet_v2_mini")
 class mobilenet_v2_mini(MobileNetV2_mini, ModelBase):
     def __init__(self, **kwargs):
         # Call the parent class's constructor with the fixed layers
