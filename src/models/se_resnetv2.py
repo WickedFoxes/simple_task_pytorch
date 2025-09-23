@@ -14,7 +14,9 @@ def initialize_weights(module):
         module.weight.data.fill_(1)
         module.bias.data.zero_()
     elif isinstance(module, nn.Linear):
-        module.bias.data.zero_()
+        if module.bias is not None:
+            module.bias.data.zero_()
+        
 
 class SEBlock(nn.Module):
     def __init__(self, channel, reduction=16):
