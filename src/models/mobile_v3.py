@@ -230,13 +230,13 @@ class mobilenet_v3_large(MobileNetV3, ModelBase):
         # Call the parent class's constructor with the fixed layers
         cfgs = [
             # k, t, c, SE, HS, s 
-            # [3,   1,  16, 0, 0, 1],
-            # [3,   4,  24, 0, 0, 2],
-            # [3,   3,  24, 0, 0, 1],
-            # [5,   3,  40, 1, 0, 2],
-            [5,   3,  40, 1, 0, 1], # exp size=120, out_ch=40, SE=True, NL=Relu, stride=1
+            [3,   1,  16, 0, 0, 1],
+            [3,   4,  24, 0, 0, 1],
+            [3,   3,  24, 0, 0, 1],
+            [5,   3,  40, 1, 0, 2],
+            [5,   3,  40, 1, 0, 1], # kernel=3, expand_size=120, out_ch=40, SE=True, NL=Relu, stride=1
             [5,   3,  40, 1, 0, 1],
-            [3,   6,  80, 0, 1, 2],
+            [3,   6,  80, 0, 1, 1],
             [3, 2.5,  80, 0, 1, 1],
             [3, 2.3,  80, 0, 1, 1],
             [3, 2.3,  80, 0, 1, 1],
