@@ -209,8 +209,8 @@ class mobilenet_v3_small(MobileNetV3, ModelBase):
         # Call the parent class's constructor with the fixed layers
         cfgs = [
             # k, t, c, SE, HS, s 
-            # [3,    1,  16, 1, 0, 2], 
-            # [3,  4.5,  24, 0, 0, 2],
+            [3,    1,  16, 1, 0, 2], 
+            [3,  4.5,  24, 0, 0, 2],
             [3, 3.67,  24, 0, 0, 1], # exp size=88(16*3.67), out_ch=16, SE=false, NL=Relu, stride=1
             [5,    4,  40, 1, 1, 2],
             [5,    6,  40, 1, 1, 1],
