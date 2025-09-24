@@ -307,9 +307,9 @@ class EfficientNet_mini_14x2(EfficientNet, ModelBase):
         width_mult, depth_mult, image_size = EFFICIENTNET_PARAMS['b0']
         
         mini_block_args = [
-            {'kernel_size': 3, 'num_repeat': 3, 'output_channels': 128, 'expand_ratio': 6, 'stride': 1, 'se_ratio': 0.25}, 
-            {'kernel_size': 3, 'num_repeat': 4, 'output_channels': 256, 'expand_ratio': 6, 'stride': 2, 'se_ratio': 0.25},
-            {'kernel_size': 3, 'num_repeat': 6, 'output_channels': 512, 'expand_ratio': 6, 'stride': 2, 'se_ratio': 0.25},
+            {'kernel_size': 3, 'num_repeat': 2, 'output_channels': 128, 'expand_ratio': 6, 'stride': 1, 'se_ratio': 0.25}, 
+            {'kernel_size': 3, 'num_repeat': 2, 'output_channels': 256, 'expand_ratio': 6, 'stride': 2, 'se_ratio': 0.25},
+            {'kernel_size': 3, 'num_repeat': 2, 'output_channels': 512, 'expand_ratio': 6, 'stride': 2, 'se_ratio': 0.25},
         ]
         super().__init__(
             block_args_list=mini_block_args,
@@ -322,7 +322,7 @@ class EfficientNet_mini_14x2(EfficientNet, ModelBase):
 
 @register("model", "efficientnet_mini")
 class EfficientNet_mini(EfficientNet, ModelBase):
-    def __init__(self, num_classes=100, efficientnet_type: str = 'b4', **kwargs):
+    def __init__(self, num_classes=100, efficientnet_type: str = 'b2', **kwargs):
         width_mult, depth_mult, image_size = EFFICIENTNET_PARAMS[efficientnet_type]
         
         mini_block_args = [
