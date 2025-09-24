@@ -283,7 +283,7 @@ class EfficientNetB0Pretrained(ModelBase):
         return self.model(x)
 
 @register("model", "efficientnet_mini_28")
-class EfficientNet_mini_28(ModelBase):
+class EfficientNet_mini_28(EfficientNet, ModelBase):
     def __init__(self, num_classes=100, **kwargs):
         width_mult, depth_mult, image_size = EFFICIENTNET_PARAMS['b0']
         
@@ -302,7 +302,7 @@ class EfficientNet_mini_28(ModelBase):
         )
 
 @register("model", "efficientnet_mini_14x2")
-class EfficientNet_mini_14x2(ModelBase):
+class EfficientNet_mini_14x2(EfficientNet, ModelBase):
     def __init__(self, num_classes=100, **kwargs):
         width_mult, depth_mult, image_size = EFFICIENTNET_PARAMS['b0']
         
@@ -321,7 +321,7 @@ class EfficientNet_mini_14x2(ModelBase):
         )
 
 @register("model", "efficientnet_mini")
-class EfficientNet_mini(ModelBase):
+class EfficientNet_mini(EfficientNet, ModelBase):
     def __init__(self, num_classes=100, efficientnet_type: str = 'b4', **kwargs):
         width_mult, depth_mult, image_size = EFFICIENTNET_PARAMS[efficientnet_type]
         
