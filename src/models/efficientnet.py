@@ -326,9 +326,9 @@ class EfficientNet_mini(EfficientNet, ModelBase):
         width_mult, depth_mult, image_size = EFFICIENTNET_PARAMS[efficientnet_type]
         
         mini_block_args = [
-            {'kernel_size': 3, 'num_repeat': 2, 'output_channels': 64, 'expand_ratio': 6, 'stride': 1, 'se_ratio': 0.25}, 
-            {'kernel_size': 3, 'num_repeat': 2, 'output_channels': 128, 'expand_ratio': 6, 'stride': 2, 'se_ratio': 0.25},
-            {'kernel_size': 3, 'num_repeat': 2, 'output_channels': 256, 'expand_ratio': 6, 'stride': 2, 'se_ratio': 0.25},
+            {'kernel_size': 3, 'num_repeat': 2, 'output_channels': 64, 'expand_ratio': 2, 'stride': 1, 'se_ratio': 0.25}, 
+            {'kernel_size': 3, 'num_repeat': 2, 'output_channels': 128, 'expand_ratio': 2, 'stride': 2, 'se_ratio': 0.25},
+            {'kernel_size': 3, 'num_repeat': 2, 'output_channels': 256, 'expand_ratio': 2, 'stride': 2, 'se_ratio': 0.25},
         ]
         super().__init__(
             block_args_list=mini_block_args,
