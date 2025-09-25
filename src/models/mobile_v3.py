@@ -267,7 +267,7 @@ class mobilenet_v3_large_pretrained(ModelBase):
         return self.model(x)
     
 
-@register("model", "mobilenet_v3_large_pretrained")
+@register("model", "efficientnet_b0_mini")
 class efficientnet_b0_mini(MobileNetV3, ModelBase):
     def __init__(self, **kwargs):
         cfgs = [
