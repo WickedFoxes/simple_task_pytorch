@@ -265,3 +265,26 @@ class mobilenet_v3_large_pretrained(ModelBase):
 
     def forward(self, x):
         return self.model(x)
+    
+
+@register("model", "mobilenet_v3_large_pretrained")
+class efficientnet_b0_mini(MobileNetV3, ModelBase):
+    def __init__(self, **kwargs):
+        cfgs = [
+            # k, t, c, SE, HS, s 
+            [3,   1,  16, 1, 0, 1],
+            [3,   2,  24, 1, 0, 1],
+            [3,   2,  24, 1, 0, 1],
+            [5,   2,  40, 1, 0, 2],
+            [5,   2,  40, 1, 0, 1], # kernel=3, expand_size=120, out_ch=40, SE=True, NL=Relu, stride=1
+            [3,   2,  80, 1, 0, 1],
+            [3,   2,  80, 1, 0, 1],
+            [3,   2,  80, 1, 0, 1],
+            [5,   2, 112, 1, 0, 1],
+            [5,   2, 112, 1, 0, 1],
+            [5,   2, 112, 1, 0, 1],
+            [5,   2, 192, 1, 0, 2],
+            [5,   2, 192, 1, 0, 1],
+            [5,   2, 320, 1, 0, 1]
+        ]
+        super().__init__(cfgs=cfgs, mode='large', **kwargs)
