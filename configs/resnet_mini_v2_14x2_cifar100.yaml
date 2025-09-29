@@ -13,14 +13,21 @@ model:
   num_classes: 100
 
 optimizer:
-  name: "sgd"
-  lr: 0.1
-  weight_decay: 0.0005
+  name: "adamw"
+  lr: 0.001
+  weight_decay: 0.0005  
+# name: "sgd"
+  # lr: 0.1
+  # weight_decay: 0.0005
 
 scheduler:
-  name: "cosine"
-  max_epochs: 50
-  min_lr: 1e-6
+  name: "cosine_schedule_with_warmup"
+  num_warmup_steps: 4000
+  num_training_steps: 80000
+  num_cycles: 1
+  # name: "cosine"
+  # max_epochs: 50
+  # min_lr: 1e-6
 
 augment:
   train:
@@ -34,14 +41,16 @@ augment:
     - {name: "Normalize", mean: [0.5071,0.4867,0.4408], std: [0.2675,0.2565,0.2761]} # cifar100
 
 loss:
-  name: "cross_entropy"
+  name: "soft_target"
+  # name: "cross_entropy"
 
 logger:
   name: "simple"
 
 trainer:
   name : "classifier_trainer"
-  epochs: 50
+  epochs: 200
+  # epochs: 50
   grad_clip: 1.0
   amp: true             # mixed precision
   val_interval: 1       # 에폭 단위 검증
@@ -50,3 +59,9 @@ checkpoint_saver:
   save_dir: "checkpoints/cifar100/resnet_mini_v2_14x2"
   save_best: true
   save_last: false
+
+batch_aug:
+  name: "mixup"
+  alpha: 1.0
+  p: 0.5            # 0~1, 배치별 적용 확률
+  num_classes: 100
