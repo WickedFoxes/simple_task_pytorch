@@ -52,3 +52,7 @@ def build_bce_logits(reduction: str="mean",
                      **kwargs):
     pw = _maybe_tensor_weights(pos_weight)
     return nn.BCEWithLogitsLoss(pos_weight=pw, reduction=reduction)
+
+@register("loss", "soft_target")
+def build_soft_target(reduction: str="mean", **kwargs):
+    return SoftTargetCrossEntropyLoss(reduction=reduction)

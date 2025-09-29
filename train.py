@@ -13,6 +13,7 @@ import src.scheduler.scheduler
 import src.trainer
 import src.loss.loss
 import src.logger
+import src.aug.batch
 from src.hook.checkpoint_saver import CheckpointSaver
 from src.hook.early_stopping import EarlyStopping
 
@@ -29,6 +30,14 @@ if __name__ == '__main__':
     # 1) 증강
     train_tf = build_transform(getattr(getattr(cfg, "augment", None), "train", []))
     eval_tf  = build_transform(getattr(getattr(cfg, "augment", None), "eval", [])) 
+
+    batch_aug = None
+    if hasattr(cfg, "batch_aug"):
+        ba = cfg.batch_aug
+        batch_aug = build(
+            "batch_aug", ba.name, 
+            **{k:v for k,v in ba.items() if k!="name"}
+        )
 
     # 2) 데이터로더
     train_loader, val_loader = build(
@@ -73,6 +82,7 @@ if __name__ == '__main__':
         "trainer", cfg.trainer.name, 
         model=model, optimizer=optimizer, scheduler=scheduler, logger=logger, 
         hooks=hooks,
+        batch_aug=batch_aug,
         cfg=cfg.trainer
     )
         

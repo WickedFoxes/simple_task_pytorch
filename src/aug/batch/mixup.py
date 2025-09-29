@@ -5,9 +5,9 @@ from src.aug.batch.base import BatchAugBase
 
 @register("batch_aug", "mixup")
 class Mixup(BatchAugBase):
-    def __init__(self, mixup_alpha=0.2, p=1.0):
+    def __init__(self, alpha=0.2, p=1.0):
         super().__init__(p)
-        self.alpha = mixup_alpha
+        self.alpha = alpha
 
     def __call__(self, x, y):
         if random.random() > self.p or self.alpha <= 0:

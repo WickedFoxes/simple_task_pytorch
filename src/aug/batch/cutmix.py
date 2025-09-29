@@ -14,9 +14,9 @@ def _rand_bbox(H, W, lam):
 
 @register("batch_aug", "cutmix")
 class CutMix(BatchAugBase):
-    def __init__(self, cutmix_alpha=1.0, p=1.0):
+    def __init__(self, alpha=1.0, p=1.0):
         super().__init__(p)
-        self.alpha = cutmix_alpha
+        self.alpha = alpha
 
     def __call__(self, x, y):
         if random.random() > self.p or self.alpha <= 0:

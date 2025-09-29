@@ -6,10 +6,11 @@ from src.registry import register
 
 @register("trainer", "classifier_trainer")
 class ClassifierTrainer:
-    def __init__(self, model, optimizer, scheduler, logger, hooks=[], cfg=None):
+    def __init__(self, model, optimizer, scheduler, logger, hooks=[], batch_aug=None, cfg=None):
         self.model = model; self.opt = optimizer; self.sched = scheduler
         self.logger = logger; self.hooks = hooks; self.cfg = cfg or {}
         self.scaler = GradScaler(enabled=self.cfg.get("amp", True))
+        self.batch_aug = batch_aug
 
 
     def train(self, train_loader, val_loader, criterion, device):
@@ -32,6 +33,9 @@ class ClassifierTrainer:
                 inputs = inputs.to(device)
                 labels = labels.to(device)
                 batch_size = labels.size(0)
+
+                if self.batch_aug is not None:
+                    inputs, labels, _ = self.batch_aug(inputs, labels)
                 
                 self.opt.zero_grad(set_to_none=True)
                 with autocast(enabled=self.cfg["amp"]):

@@ -33,7 +33,7 @@ def linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps)
     return get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps)
 
 @register("scheduler", "cosine_schedule_with_warmup")
-def cosine_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, num_cycles=7):
+def cosine_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, num_cycles=1):
     return get_cosine_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, num_cycles)
 
 
