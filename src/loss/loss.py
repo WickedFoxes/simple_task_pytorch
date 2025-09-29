@@ -5,7 +5,7 @@ from src.registry import register
 import os, json
 
 import src.loss.FocalLoss as FocalLoss
-import src.loss.SoftTargetCrossEntropyLoss as SoftTargetCrossEntropyLoss
+from src.loss.SoftTargetCrossEntropyLoss import SoftTargetCrossEntropyLoss
 
 
 def _maybe_tensor_weights(w, device="cpu"):
