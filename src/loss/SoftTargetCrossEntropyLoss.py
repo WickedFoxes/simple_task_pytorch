@@ -3,9 +3,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class SoftTargetCrossEntropyLoss(nn.Module):
+    def __init__(self, reduction: str = "mean"):
+        super().__init__()
+        valid = {"none", "mean", "sum"}
+        if reduction not in valid:
+            raise ValueError(f"[SoftTargetCELoss] reduction must be one of {valid}, got: {reduction}")
+        self.reduction = reduction
+
     def forward(self, logits, targets):
         """
-        logits: (B, C)
+        logits:  (B, C)
         targets: (B,) int class indices  or  (B, C) soft/one-hot
         """
         if targets.dim() == 1:  # class indices
@@ -21,6 +28,13 @@ class SoftTargetCrossEntropyLoss(nn.Module):
         else:
             raise ValueError(f"[SoftTargetCELoss] 지원하지 않는 targets shape: {targets.shape}")
 
+        # per-sample loss: (B,)
         log_probs = F.log_softmax(logits, dim=-1)
-        loss = -(targets * log_probs).sum(dim=-1).mean()
-        return loss
+        loss = -(targets * log_probs).sum(dim=-1)
+
+        if self.reduction == "none":
+            return loss
+        elif self.reduction == "sum":
+            return loss.sum()
+        else:  # "mean"
+            return loss.mean()
