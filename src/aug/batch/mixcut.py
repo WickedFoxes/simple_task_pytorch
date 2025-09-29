@@ -2,8 +2,8 @@ import torch
 import random
 from src.registry import register
 from src.aug.batch.base import BatchAugBase
-from src.aug.mixup import Mixup
-from src.aug.cutmix import CutMix
+from src.aug.batch.mixup import Mixup
+from src.aug.batch.cutmix import CutMix
 
 
 @register("batch_aug", "mixcut")
