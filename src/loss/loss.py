@@ -4,7 +4,7 @@ from typing import Optional, Sequence, Union
 from src.registry import register
 import os, json
 
-import src.loss.FocalLoss as FocalLoss
+from src.loss.FocalLoss import FocalLoss
 from src.loss.SoftTargetCrossEntropyLoss import SoftTargetCrossEntropyLoss
 
 
