@@ -52,8 +52,8 @@ checkpoint_saver:
   save_best: true
   save_last: false
 
-
 batch_aug:
   name: "mixup"
   alpha: 1.0
   p: 0.5            # 0~1, 배치별 적용 확률
+  num_classes: 100
