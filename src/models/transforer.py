@@ -63,17 +63,23 @@ class PositionalEncoding(nn.Module):
 #     attn_weight = query @ key.transpose(-2, -1) * scale_factor
 #     attn_weight += attn_bias
 #     attn_weight = torch.softmax(attn_weight, dim=-1)
-#     attn_weight = torch.dropout(attn_weight, dropout_p, train=True)
+#     attn_weight = torch.dropout(attn_weight, dropout_p)
 #     return attn_weight @ value
 
-def scaled_dot_product_attention(Q, K, V, attn_mask=None, dropout=None):
+def scaled_dot_product_attention(
+        query, 
+        key, 
+        value, 
+        attn_mask=None, 
+        dropout_p=0.0,
+    ):
     """
     Q, K, V: (batch * num_heads, seq_len, d_k)
     attn_mask: (batch, 1, 1, seq_len) or (batch, 1, seq_len, seq_len) for encoder
                (1, 1, seq_len, seq_len) for decoder (causal mask)
     """
-    d_k = Q.size(-1)
-    scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(d_k)
+    d_k = query.size(-1)
+    scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
     # scores: (batch * num_heads, seq_len, seq_len)
     
     if attn_mask is not None:
@@ -93,12 +99,10 @@ def scaled_dot_product_attention(Q, K, V, attn_mask=None, dropout=None):
         scores = scores.masked_fill(attn_mask == 0, float('-inf'))
     
     attn_weights = F.softmax(scores, dim=-1)
+    attn_weights = torch.dropout(attn_weights, dropout_p)
     
-    if dropout is not None:
-        attn_weights = dropout(attn_weights)
-    
-    output = torch.matmul(attn_weights, V)
-    return output, attn_weights
+    output = torch.matmul(attn_weights, value)
+    return output
 
 class MultiheadAttention(nn.Module):
     def __init__(
