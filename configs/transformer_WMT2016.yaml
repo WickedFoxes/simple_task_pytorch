@@ -5,7 +5,7 @@ dataset:
   name: "wmt16_de_en"
   root: "./data/wmt16_de_en"
   pretrained_tokenizer_name: "xlm-roberta-base"
-  num_workers: 8
+  num_workers: 4
   batch_size: 32
   pin_memory: true
   max_len: 128
@@ -17,7 +17,7 @@ model:
   tgt_vocab_size: 250002 # tokenizer의 vocab_size
   src_pad_id: 1 # tokenizer의 pad_idx
   tgt_pad_id: 1 # tokenizer의 pad_idx
-  embed_dim: 256
+  embed_dim: 128
   num_heads: 4
   num_encoder_layers: 3
   num_decoder_layers: 3
