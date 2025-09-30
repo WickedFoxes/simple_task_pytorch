@@ -86,8 +86,8 @@ def _make_wmt16_collate_fn(src_pad_id, tgt_pad_id, tgt_bos_id):
             tgt_in.append(t[:-1])
             tgt_out.append(t[1:])
         
-        tgt_in_padded = pad_sequence(tgt_in, tgt_pad_id)    # (B, T-1) → 길이 맞추기
-        tgt_out_padded = pad_sequence(tgt_out, tgt_pad_id)  # (B, T-1)
+        tgt_in_padded = pad_sequence(tgt_in, batch_first=True, padding_value=tgt_pad_id)    # (B, T-1) → 길이 맞추기
+        tgt_out_padded = pad_sequence(tgt_out, batch_first=True, padding_value=tgt_pad_id)  # (B, T-1)
 
         return src_list_padded, tgt_in_padded, tgt_out_padded
     return collate_fn
