@@ -37,7 +37,7 @@ class TranslateTrainer:
                 
                 self.opt.zero_grad(set_to_none=True)
                 with autocast(enabled=self.cfg["amp"]):
-                    logits = self.model(src_ids, tgt_in_ids, src_pad_id=self.cfg["src_pad_id"], tgt_pad_id=self.cfg["tgt_pad_id"])
+                    logits = self.model(src_ids, tgt_in_ids)
                     B, T, V = logits.size()
                     loss = criterion(logits.reshape(B*T, V), tgt_out_ids.reshape(B*T))
                 

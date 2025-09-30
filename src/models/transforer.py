@@ -282,8 +282,11 @@ class TransformerTL(ModelBase):
             feedforward_dim=feedforward_dim, dropout_p=dropout_p, activation=F.relu
         )
         self.generator = nn.Linear(embed_dim, tgt_vocab_size)
+        self.src_pad_id = src_pad_id
+        self.tgt_pad_id = tgt_pad_id
 
-    def forward(self, src_ids, tgt_in_ids, src_pad_id: int, tgt_pad_id: int):
+
+    def forward(self, src_ids, tgt_in_ids):
         """
         src_ids: (batch, src_len)  tgt_in_ids: (batch, tgt_len)
         """
@@ -291,8 +294,8 @@ class TransformerTL(ModelBase):
         tgt_in = self.pos(self.tgt_tok(tgt_in_ids))
 
         # 마스크 생성
-        src_key_padding_mask = (src_ids == src_pad_id)  # (batch, src_len) True=pad
-        tgt_key_padding_mask = (tgt_in_ids == tgt_pad_id)  # (batch, tgt_len)
+        src_key_padding_mask = (src_ids == self.src_pad_id)  # (batch, src_len) True=pad
+        tgt_key_padding_mask = (tgt_in_ids == self.tgt_pad_id)  # (batch, tgt_len)
 
         src_mask = self.make_src_mask(src_key_padding_mask)   # (batch, 1, 1, src_len) 형태 가정
         tgt_mask = self.make_tgt_mask(tgt_key_padding_mask)   # (batch, 1, tgt_len, tgt_len) (look-ahead + pad)
