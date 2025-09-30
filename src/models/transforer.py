@@ -301,9 +301,6 @@ class TransformerTL(ModelBase):
 
         src_mask = self.make_src_mask(src_key_padding_mask)   # (batch, 1, 1, src_len) 형태 가정
         tgt_mask = self.make_tgt_mask(tgt_key_padding_mask)   # (batch, 1, tgt_len, tgt_len) (look-ahead + pad)
-        src_mask = self.to_additive_mask(src_mask, src_mask.dtype)
-        tgt_mask = self.to_additive_mask(tgt_mask, tgt_mask.dtype)
-
 
         hidden = self.transformer(src, tgt_in, src_mask=src_mask, tgt_mask=tgt_mask)  # (batch, tgt_len, d)
         logits = self.generator(hidden)  # (batch, tgt_len, vocab)
@@ -312,16 +309,17 @@ class TransformerTL(ModelBase):
     def make_src_mask(self, src_key_padding: torch.Tensor):
         """
         src_key_padding: (batch, src_len) where True indicates PAD
-        반환: (batch, 1, 1, src_len), True=mask
+        반환: (batch, 1, 1, src_len), masked 위치는 -inf
         """
-        # 입력 텐서 디바이스/ dtype을 그대로 따르게 하면 안전
-        return src_key_padding.to(dtype=torch.bool).unsqueeze(1).unsqueeze(2)
+        mask = src_key_padding.unsqueeze(1).unsqueeze(2)  # (batch, 1, 1, src_len)
+        # True(mask) -> -inf, False(valid) -> 0.0
+        return mask.masked_fill(mask, float('-inf')).masked_fill(~mask, 0.0)
 
 
     def make_tgt_mask(self, tgt_key_padding: torch.Tensor):
         """
         look-ahead(하삼각) + pad mask 결합
-        반환: (batch, 1, tgt_len, tgt_len), True=mask
+        반환: (batch, 1, tgt_len, tgt_len), masked 위치는 -inf
         """
         bsz, tgt_len = tgt_key_padding.size()
         dev = tgt_key_padding.device
@@ -335,8 +333,7 @@ class TransformerTL(ModelBase):
         pad_mask = tgt_key_padding.to(dtype=torch.bool).unsqueeze(1).unsqueeze(2)  # (b,1,1,t)
 
         # 브로드캐스트 결합 -> (b,1,t,t)
-        return pad_mask | subsequent
-
-    def to_additive_mask(self, mask_bool: torch.Tensor, dtype: torch.dtype) -> torch.Tensor:
-        # True(가려짐) → -inf, False(통과) → 0
-        return mask_bool.to(dtype) * torch.finfo(dtype).min
+        combined_mask = pad_mask | subsequent
+        
+        # True(mask) -> -inf, False(valid) -> 0.0
+        return combined_mask.masked_fill(combined_mask, float('-inf')).masked_fill(~combined_mask, 0.0)
