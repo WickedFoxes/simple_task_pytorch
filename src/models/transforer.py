@@ -200,12 +200,12 @@ class TransformerDecoderLayer(nn.Module):
         residual = x
         x = self.norm1(x)
         x = self.self_attn(x, x, x, attn_mask=self_attn_mask)
-        x = self.dropout(x)
+        x = self.dropout1(x)
         x = residual + x
         residual = x
         x = self.norm2(x)
         x = self.cross_attn(x, memory, memory, attn_mask=cross_attn_mask)
-        x = self.dropout(x)
+        x = self.dropout2(x)
         x = residual + x
         residual = x
         x = self.norm3(x)
