@@ -309,21 +309,27 @@ class TransformerTL(ModelBase):
     def make_src_mask(self, src_key_padding: torch.Tensor):
         """
         src_key_padding: (batch, src_len) where True indicates PAD
-        반환: (batch, 1, 1, src_len), attention 에서 add-mask(-inf)로 사용 가정
+        반환: (batch, 1, 1, src_len), True=mask
         """
-        return src_key_padding.unsqueeze(1).unsqueeze(2)  # True=masked
+        # 입력 텐서 디바이스/ dtype을 그대로 따르게 하면 안전
+        return src_key_padding.to(dtype=torch.bool).unsqueeze(1).unsqueeze(2)
+
 
     def make_tgt_mask(self, tgt_key_padding: torch.Tensor):
         """
         look-ahead(하삼각) + pad mask 결합
-        반환: (batch, 1, tgt_len, tgt_len)
+        반환: (batch, 1, tgt_len, tgt_len), True=mask
         """
         bsz, tgt_len = tgt_key_padding.size()
-        # subsequent mask: (1, 1, tgt_len, tgt_len)
-        subsequent = torch.triu(torch.ones((tgt_len, tgt_len), dtype=torch.bool), diagonal=1)  # True=mask 상삼각
-        subsequent = subsequent.unsqueeze(0).unsqueeze(0)  # (1,1,t,t)
-        # pad mask: (batch, 1, 1, tgt_len)
-        pad_mask = tgt_key_padding.unsqueeze(1).unsqueeze(2)  # True=mask
-        # 브로드캐스트 결합
-        # 최종: True 위치는 attention에서 가려짐
-        return subsequent | pad_mask
+        dev = tgt_key_padding.device
+
+        # (tgt_len, tgt_len)에서 상삼각 True=mask
+        subsequent = torch.triu(
+            torch.ones((tgt_len, tgt_len), device=dev, dtype=torch.bool),
+            diagonal=1
+        ).unsqueeze(0).unsqueeze(0)  # (1,1,t,t)
+
+        pad_mask = tgt_key_padding.to(dtype=torch.bool).unsqueeze(1).unsqueeze(2)  # (b,1,1,t)
+
+        # 브로드캐스트 결합 -> (b,1,t,t)
+        return pad_mask | subsequent
