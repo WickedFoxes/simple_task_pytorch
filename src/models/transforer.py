@@ -301,6 +301,9 @@ class TransformerTL(ModelBase):
 
         src_mask = self.make_src_mask(src_key_padding_mask)   # (batch, 1, 1, src_len) 형태 가정
         tgt_mask = self.make_tgt_mask(tgt_key_padding_mask)   # (batch, 1, tgt_len, tgt_len) (look-ahead + pad)
+        src_mask = self.to_additive_mask(src_mask, src_mask.dtype)
+        tgt_mask = self.to_additive_mask(tgt_mask, tgt_mask.dtype)
+
 
         hidden = self.transformer(src, tgt_in, src_mask=src_mask, tgt_mask=tgt_mask)  # (batch, tgt_len, d)
         logits = self.generator(hidden)  # (batch, tgt_len, vocab)
@@ -333,3 +336,7 @@ class TransformerTL(ModelBase):
 
         # 브로드캐스트 결합 -> (b,1,t,t)
         return pad_mask | subsequent
+
+    def to_additive_mask(self, mask_bool: torch.Tensor, dtype: torch.dtype) -> torch.Tensor:
+        # True(가려짐) → -inf, False(통과) → 0
+        return mask_bool.to(dtype) * torch.finfo(dtype).min
