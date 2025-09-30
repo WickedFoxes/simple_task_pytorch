@@ -159,7 +159,7 @@ class TransformerEncoderLayer(nn.Module):
         residual = x
         x = self.norm1(x)
         x = self.self_attn(x, x, x, attn_mask=attn_mask)
-        x = self.dropout(x)
+        x = self.dropout1(x)
         x = residual + x
         residual = x
         x = self.norm2(x)
