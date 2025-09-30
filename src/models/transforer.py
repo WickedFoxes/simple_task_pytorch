@@ -41,30 +41,25 @@ class PositionalEncoding(nn.Module):
 
 
 def scaled_dot_product_attention(
-        query, 
-        key, 
-        value, 
-        attn_mask=None, 
-        dropout_p=0.0,
+        query, key, value, attn_mask=None, dropout_p=0.0,
 ) -> torch.Tensor:
+    # query,key,value: [B,H,L,d], [B,H,S,d], [B,H,S,d]
     d_k = query.size(-1)
-    L = query.size(-2) # [batch, heads, L, d_k]
-    S = key.size(-2) # [batch, heads, S, d_k]
+    scale = 1.0 / math.sqrt(d_k)
 
-    scale_factor = 1 / math.sqrt(d_k)
-    attn_bias = torch.zeros(L, S, dtype=query.dtype, device=query.device)
+    # [B,H,L,S]
+    attn_weight = (query @ key.transpose(-2, -1)) * scale
 
     if attn_mask is not None:
+        # attn_mask shape: broadcastable to [B,H,L,S]
         if attn_mask.dtype == torch.bool:
-            attn_bias.masked_fill_(attn_mask.logical_not(), float("-inf"))
+            attn_weight = attn_weight.masked_fill(~attn_mask, float('-inf'))
         else:
-            attn_bias = attn_mask + attn_bias
+            attn_weight = attn_weight + attn_mask  # additive mask (-inf for masked, 0 for valid)
 
-    attn_weight = query @ key.transpose(-2, -1) * scale_factor
-    attn_weight += attn_bias
     attn_weight = torch.softmax(attn_weight, dim=-1)
-    attn_weight = torch.dropout(attn_weight, dropout_p)
-    return attn_weight @ value
+    attn_weight = F.dropout(attn_weight, p=dropout_p, training=query.requires_grad)  # or training flag from module
+    return attn_weight @ value  # [B,H,L,d]
 
 
 class MultiheadAttention(nn.Module):
@@ -303,38 +298,48 @@ class TransformerTL(ModelBase):
         src_mask = self.make_src_mask(src_key_padding_mask)   # (batch, 1, 1, src_len) 형태 가정
         tgt_mask = self.make_tgt_mask(tgt_key_padding_mask)   # (batch, 1, tgt_len, tgt_len) (look-ahead + pad)
 
-        hidden = self.transformer(src, tgt_in, src_mask=src_mask, tgt_mask=tgt_mask)  # (batch, tgt_len, d)
+        hidden = self.transformer(
+            src, 
+            tgt_in, 
+            src_mask=src_mask, 
+            tgt_mask=tgt_mask
+        )  # (batch, tgt_len, d)
         logits = self.generator(hidden)  # (batch, tgt_len, vocab)
         return logits
     
     def make_src_mask(self, src_key_padding: torch.Tensor):
         """
-        src_key_padding: (batch, src_len) where True indicates PAD
-        반환: (batch, 1, 1, src_len), masked 위치는 -inf
+        src_key_padding: (B, S)  True=PAD
+        return: (B, 1, 1, S) with -inf at PAD, 0 otherwise
         """
-        mask = src_key_padding.unsqueeze(1).unsqueeze(2)  # (batch, 1, 1, src_len)
-        # True(mask) -> -inf, False(valid) -> 0.0
-        return mask.masked_fill(mask, float('-inf')).masked_fill(~mask, 0.0)
+        B, S = src_key_padding.shape
+        dev = src_key_padding.device
+        dtype = self.src_tok.weight.dtype  # model float dtype
+
+        mask_bool = src_key_padding.unsqueeze(1).unsqueeze(2)  # (B,1,1,S), bool
+        minus_inf = torch.tensor(float('-inf'), device=dev, dtype=dtype)
+        zero = torch.tensor(0.0, device=dev, dtype=dtype)
+        return torch.where(mask_bool, minus_inf, zero)  # (B,1,1,S)
 
 
     def make_tgt_mask(self, tgt_key_padding: torch.Tensor):
         """
-        look-ahead(하삼각) + pad mask 결합
-        반환: (batch, 1, tgt_len, tgt_len), masked 위치는 -inf
+        look-ahead + pad mask (additive float mask)
+        return: (B, 1, T, T) with -inf at masked positions, 0 otherwise
         """
-        bsz, tgt_len = tgt_key_padding.size()
+        B, T = tgt_key_padding.size()
         dev = tgt_key_padding.device
+        dtype = self.tgt_tok.weight.dtype
 
-        # (tgt_len, tgt_len)에서 상삼각 True=mask
+        # Look-ahead (upper triangular) : True=mask
         subsequent = torch.triu(
-            torch.ones((tgt_len, tgt_len), device=dev, dtype=torch.bool),
-            diagonal=1
-        ).unsqueeze(0).unsqueeze(0)  # (1,1,t,t)
+            torch.ones((T, T), device=dev, dtype=torch.bool), diagonal=1
+        ).unsqueeze(0).unsqueeze(0)  # (1,1,T,T)
 
-        pad_mask = tgt_key_padding.to(dtype=torch.bool).unsqueeze(1).unsqueeze(2)  # (b,1,1,t)
+        pad_mask = tgt_key_padding.to(torch.bool).unsqueeze(1).unsqueeze(2)  # (B,1,1,T)
+        pad_mask = pad_mask.expand(B, 1, T, T)  # broadcast to (B,1,T,T) to combine with subsequent
 
-        # 브로드캐스트 결합 -> (b,1,t,t)
-        combined_mask = pad_mask | subsequent
-        
-        # True(mask) -> -inf, False(valid) -> 0.0
-        return combined_mask.masked_fill(combined_mask, float('-inf')).masked_fill(~combined_mask, 0.0)
+        combined_bool = subsequent | pad_mask  # (B,1,T,T), True=mask
+        minus_inf = torch.tensor(float('-inf'), device=dev, dtype=dtype)
+        zero = torch.tensor(0.0, device=dev, dtype=dtype)
+        return torch.where(combined_bool, minus_inf, zero)  # (B,1,T,T)
