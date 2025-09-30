@@ -127,7 +127,7 @@ class MultiheadAttention(nn.Module):
         attn_out = scaled_dot_product_attention(
             q, k, v,
             attn_mask=attn_mask,
-            dropout_p=self.dropout.p if self.training else 0.0,
+            dropout_p=self.dropout_p if self.training else 0.0,
         )  # (B, H, L, d_k)
 
         # 4) 헤드 결합 및 출력 투영
