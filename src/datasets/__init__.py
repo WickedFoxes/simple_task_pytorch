@@ -1,3 +1,4 @@
 from src.datasets.cifar10 import build_cifar10_dataloaders
 from src.datasets.cifar100 import build_cifar100_dataloaders
 from src.datasets.imdb import build_imdb_dataloaders
+from src.datasets.wmt16_de_en import build_wmt16_dataloaders
