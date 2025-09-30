@@ -16,6 +16,7 @@ import torch.nn.functional as F
 from torch import Tensor
 from torch.nn.init import xavier_uniform_, xavier_normal_, constant_
 from torch.nn.modules.linear import NonDynamicallyQuantizableLinear
+from torch.nn.modules.container import ModuleList
 
 from src.registry import register
 from src.models.base import ModelBase
