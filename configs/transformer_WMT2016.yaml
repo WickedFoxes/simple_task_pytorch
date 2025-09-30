@@ -17,10 +17,10 @@ model:
   tgt_vocab_size: 250002 # tokenizer의 vocab_size
   src_pad_id: 1 # tokenizer의 pad_idx
   tgt_pad_id: 1 # tokenizer의 pad_idx
-  embed_dim: 512
+  embed_dim: 256
   num_heads: 8
-  num_encoder_layers: 6
-  num_decoder_layers: 6
+  num_encoder_layers: 3
+  num_decoder_layers: 3
   dropout_p: 0.1
   feedforward_dim: 2048
 
