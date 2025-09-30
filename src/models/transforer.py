@@ -40,69 +40,32 @@ class PositionalEncoding(nn.Module):
         return out
 
 
-# def scaled_dot_product_attention(
-#         query, 
-#         key, 
-#         value, 
-#         attn_mask=None, 
-#         dropout_p=0.0,
-# ) -> torch.Tensor:
-#     d_k = query.size(-1)
-#     L = query.size(-2) # [batch, heads, L, d_k]
-#     S = key.size(-2) # [batch, heads, S, d_k]
-
-#     scale_factor = 1 / math.sqrt(d_k)
-#     attn_bias = torch.zeros(L, S, dtype=query.dtype, device=query.device)
-
-#     if attn_mask is not None:
-#         if attn_mask.dtype == torch.bool:
-#             attn_bias.masked_fill_(attn_mask.logical_not(), float("-inf"))
-#         else:
-#             attn_bias = attn_mask + attn_bias
-
-#     attn_weight = query @ key.transpose(-2, -1) * scale_factor
-#     attn_weight += attn_bias
-#     attn_weight = torch.softmax(attn_weight, dim=-1)
-#     attn_weight = torch.dropout(attn_weight, dropout_p)
-#     return attn_weight @ value
-
 def scaled_dot_product_attention(
         query, 
         key, 
         value, 
         attn_mask=None, 
         dropout_p=0.0,
-    ):
-    """
-    Q, K, V: (batch * num_heads, seq_len, d_k)
-    attn_mask: (batch, 1, 1, seq_len) or (batch, 1, seq_len, seq_len) for encoder
-               (1, 1, seq_len, seq_len) for decoder (causal mask)
-    """
+) -> torch.Tensor:
     d_k = query.size(-1)
-    scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
-    # scores: (batch * num_heads, seq_len, seq_len)
-    
+    L = query.size(-2) # [batch, heads, L, d_k]
+    S = key.size(-2) # [batch, heads, S, d_k]
+
+    scale_factor = 1 / math.sqrt(d_k)
+    attn_bias = torch.zeros(L, S, dtype=query.dtype, device=query.device)
+
     if attn_mask is not None:
-        # Reshape scores to match mask dimensions
-        batch_times_heads = scores.size(0)
-        seq_len = scores.size(1)
-        
-        # If mask is 4D [batch, 1, 1, seq_len] or [batch, 1, seq_len, seq_len]
-        if attn_mask.dim() == 4:
-            # Expand mask to [batch, num_heads, seq_len, seq_len]
-            num_heads = batch_times_heads // attn_mask.size(0)
-            attn_mask = attn_mask.expand(-1, num_heads, -1, -1)
-            # Reshape to [batch * num_heads, seq_len, seq_len]
-            attn_mask = attn_mask.reshape(batch_times_heads, attn_mask.size(2), attn_mask.size(3))
-        
-        # Now mask should be [batch * num_heads, seq_len, seq_len]
-        scores = scores.masked_fill(attn_mask == 0, float('-inf'))
-    
-    attn_weights = F.softmax(scores, dim=-1)
-    attn_weights = torch.dropout(attn_weights, dropout_p)
-    
-    output = torch.matmul(attn_weights, value)
-    return output
+        if attn_mask.dtype == torch.bool:
+            attn_bias.masked_fill_(attn_mask.logical_not(), float("-inf"))
+        else:
+            attn_bias = attn_mask + attn_bias
+
+    attn_weight = query @ key.transpose(-2, -1) * scale_factor
+    attn_weight += attn_bias
+    attn_weight = torch.softmax(attn_weight, dim=-1)
+    attn_weight = torch.dropout(attn_weight, dropout_p)
+    return attn_weight @ value
+
 
 class MultiheadAttention(nn.Module):
     def __init__(
