@@ -17,7 +17,7 @@ model:
   tgt_vocab_size: 250002 # tokenizer의 vocab_size
   src_pad_id: 1 # tokenizer의 pad_idx
   tgt_pad_id: 1 # tokenizer의 pad_idx
-  embed_dim: 128
+  embed_dim: 256
   num_heads: 4
   num_encoder_layers: 3
   num_decoder_layers: 3
@@ -31,8 +31,8 @@ optimizer:
 
 scheduler:
   name: "cosine_schedule_with_warmup"
-  num_warmup_steps: 8885
-  num_training_steps: 177695
+  num_warmup_steps: 35538
+  num_training_steps: 710760
   num_cycles: 1
 
 loss:
