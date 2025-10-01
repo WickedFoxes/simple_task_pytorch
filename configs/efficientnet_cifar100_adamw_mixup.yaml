@@ -15,13 +15,13 @@ model:
 optimizer:
   name: "adamw"
   lr: 0.001
-  weight_decay: 0.0005
+  weight_decay: 0.05
 
 scheduler:
   name: "cosine_schedule_with_warmup"
   num_warmup_steps: 4000
   num_training_steps: 80000
-  num_cycles: 1
+  num_cycles: 0.5
 
 augment:
   train:
@@ -48,7 +48,7 @@ trainer:
   val_interval: 1       # 에폭 단위 검증
 
 checkpoint_saver:
-  save_dir: "checkpoints/cifar100/efficientnet_b0"
+  save_dir: "checkpoints/cifar100/efficientnet_b0_mixup"
   save_best: true
   save_last: false
 
