@@ -62,7 +62,7 @@ class TranslateTrainer:
                         self.sched.step() 
                 
                 train_loss += loss.item() * batch_size
-                train_acc  += self.accuracy(logits, tgt_out_ids, pad_id=self.cfg["tgt_pad_id"]) * batch_size
+                train_acc  += self.accuracy(logits, tgt_out_ids, criterion=criterion) * batch_size
                 n += batch_size
 
             train_loss /= n; train_acc /= n
@@ -130,15 +130,15 @@ class TranslateTrainer:
             src_ids = src_ids.to(device)
             tgt_in_ids = tgt_in_ids.to(device)
             tgt_out_ids = tgt_out_ids.to(device)
-            logits = model(src_ids, tgt_in_ids, src_pad_id=self.cfg["src_pad_id"], tgt_pad_id=self.cfg["tgt_pad_id"])
-            B, T, V = logits.size()
-            loss = criterion(logits.reshape(B*T, V), tgt_out_ids.reshape(B*T))
+            logits = model(src_ids, tgt_in_ids)
+            B, T, D = logits.size()
+            loss = criterion(logits.reshape(B*T, D), tgt_out_ids.reshape(B*T))
             total += loss.item()
         return total / len(loader)
 
 
     @torch.no_grad()
-    def accuracy(self, logits, targets, pad_id=None):
+    def accuracy(self, logits, targets, criterion=None):
         """
         logits : (B, T, V)
         targets: (B, T)
@@ -148,7 +148,8 @@ class TranslateTrainer:
         preds = logits.argmax(dim=-1)
         
         # pad 제외
-        if pad_id is not None:
+        if criterion is not None and hasattr(criterion, "ignore_index"):
+            pad_id = criterion.ignore_index
             mask = (targets != pad_id)
             correct = (preds == targets) & mask
             acc = correct.sum().float() / mask.sum().float()
