@@ -9,8 +9,8 @@ dataset:
   batch_size: 32
   pin_memory: true
   max_len: 128
-  max_train_data_len: 320
-  max_eval_data_len: 32
+  # max_train_data_len: 320
+  # max_eval_data_len: 32
 
 
 model:
@@ -33,13 +33,12 @@ optimizer:
 
 scheduler:
   name: "cosine_schedule_with_warmup"
-  num_warmup_steps: 5
-  num_training_steps: 50
   num_cycles: 1  
-  # num_warmup_steps: 35538
-  # num_training_steps: 710760
+  num_warmup_steps: 35538
+  num_training_steps: 710760
+  # num_warmup_steps: 5
+  # num_training_steps: 50
   
-
 loss:
   name: "label_smoothing"
   label_smoothing: 0.1
