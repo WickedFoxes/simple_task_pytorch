@@ -4,7 +4,7 @@ device: "cuda"
 dataset:
   name: "wmt16_de_en"
   root: "./data/wmt16_de_en"
-  pretrained_tokenizer_name: "Helsinki-NLP/opus-mt-en-de"
+  pretrained_tokenizer_name: "FacebookAI/xlm-roberta-base"
   num_workers: 4
   batch_size: 32
   pin_memory: true
@@ -17,10 +17,10 @@ model:
   name: "transformer_tl"
   src_vocab_size: 250002 # tokenizer의 vocab_size
   tgt_vocab_size: 250002 # tokenizer의 vocab_size
-  src_pad_id: 58100 # tokenizer의 pad_idx
-  tgt_pad_id: 58100 # tokenizer의 pad_idx
-  embed_dim: 256
-  num_heads: 4
+  src_pad_id: 1 # tokenizer의 pad_idx
+  tgt_pad_id: 1 # tokenizer의 pad_idx
+  embed_dim: 128
+  num_heads: 3
   num_encoder_layers: 3
   num_decoder_layers: 3
   dropout_p: 0.1
@@ -36,7 +36,7 @@ scheduler:
   num_warmup_steps: 5
   num_training_steps: 50
   num_cycles: 1  
-# num_warmup_steps: 35538
+  # num_warmup_steps: 35538
   # num_training_steps: 710760
   
 
