@@ -95,7 +95,7 @@ def _make_wmt16_collate_fn(src_pad_id, tgt_pad_id, tgt_bos_id):
 
 @register("dataset", "wmt16_de_en")
 def build_wmt16_dataloaders(cfg: Dict[str, Any], **kwargs) -> Tuple[DataLoader, DataLoader]:
-    tokenizer = AutoTokenizer.from_pretrained(cfg.get("pretrained_tokenizer_name", "bert-base-uncased"))
+    tokenizer = AutoTokenizer.from_pretrained(cfg.get("pretrained_tokenizer_name", "Helsinki-NLP/opus-mt-en-de"))
     train_set = WMT16_DE_EN_Wrap.from_config(cfg, tokenizer=tokenizer, train=True)
     val_set   = WMT16_DE_EN_Wrap.from_config(cfg, tokenizer=tokenizer, train=False)
 
