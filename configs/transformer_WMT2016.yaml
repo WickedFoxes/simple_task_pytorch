@@ -4,19 +4,21 @@ device: "cuda"
 dataset:
   name: "wmt16_de_en"
   root: "./data/wmt16_de_en"
-  pretrained_tokenizer_name: "xlm-roberta-base"
+  pretrained_tokenizer_name: "bert-base-uncased"
   num_workers: 4
   batch_size: 32
   pin_memory: true
   max_len: 128
+  max_train_data_len: 320
+  max_eval_data_len: 32
 
 
 model:
   name: "transformer_tl"
   src_vocab_size: 250002 # tokenizer의 vocab_size
   tgt_vocab_size: 250002 # tokenizer의 vocab_size
-  src_pad_id: 1 # tokenizer의 pad_idx
-  tgt_pad_id: 1 # tokenizer의 pad_idx
+  src_pad_id: 58100 # tokenizer의 pad_idx
+  tgt_pad_id: 58100 # tokenizer의 pad_idx
   embed_dim: 256
   num_heads: 4
   num_encoder_layers: 3
@@ -31,14 +33,17 @@ optimizer:
 
 scheduler:
   name: "cosine_schedule_with_warmup"
-  num_warmup_steps: 35538
-  num_training_steps: 710760
-  num_cycles: 1
+  num_warmup_steps: 5
+  num_training_steps: 50
+  num_cycles: 1  
+# num_warmup_steps: 35538
+  # num_training_steps: 710760
+  
 
 loss:
   name: "label_smoothing"
   label_smoothing: 0.1
-  ignore_index: 1 # tokenizer의 pad_idx
+  ignore_index: 58100 # tokenizer의 pad_idx
 
 logger:
   name: "simple"

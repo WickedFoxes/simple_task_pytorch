@@ -113,7 +113,7 @@ def build_wmt16_dataloaders(cfg: Dict[str, Any], **kwargs) -> Tuple[DataLoader, 
     if pad_id is None:
         pad_id = tokenizer.get_vocab().get("<pad>", 1)
     if bos_id is None:
-        bos_id = tokenizer.get_vocab().get("<s>", 0)
+        bos_id = tokenizer.get_vocab().get("<s>", 1)
 
     collate_fn = _make_wmt16_collate_fn(pad_id, pad_id, bos_id)
 
