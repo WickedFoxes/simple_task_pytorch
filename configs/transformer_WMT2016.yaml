@@ -4,7 +4,7 @@ device: "cuda"
 dataset:
   name: "wmt16_de_en"
   root: "./data/wmt16_de_en"
-  pretrained_tokenizer_name: "bert-base-uncased"
+  pretrained_tokenizer_name: "Helsinki-NLP/opus-mt-en-de"
   num_workers: 4
   batch_size: 32
   pin_memory: true
