@@ -123,18 +123,39 @@ class TranslateTrainer:
                 h.on_train_end(self.model, self.opt, self.sched, epoch)
 
     @torch.no_grad()
-    def evaluate(self, model, loader, device, criterion):
+    def evaluate(self, model, loader, device, criterion, pad_id=0):
         model.eval()
-        total = 0.0
+        total_loss = 0.0
+        total_correct = 0
+        total_tokens = 0
+
         for src_ids, tgt_in_ids, tgt_out_ids in loader:
             src_ids = src_ids.to(device)
             tgt_in_ids = tgt_in_ids.to(device)
             tgt_out_ids = tgt_out_ids.to(device)
-            logits = model(src_ids, tgt_in_ids)
+
+            logits = model(src_ids, tgt_in_ids)  # [B, T, D]
             B, T, D = logits.size()
-            loss = criterion(logits.reshape(B*T, D), tgt_out_ids.reshape(B*T))
-            total += loss.item()
-        return total / len(loader)
+
+            # loss 계산
+            loss = criterion(
+                logits.reshape(B * T, D),
+                tgt_out_ids.reshape(B * T)
+            )
+            total_loss += loss.item()
+
+            # 정확도 계산 (PAD 제외)
+            preds = logits.argmax(dim=-1)  # [B, T]
+            mask = (tgt_out_ids != pad_id)
+            correct = ((preds == tgt_out_ids) & mask).sum().item()
+            total = mask.sum().item()
+
+            total_correct += correct
+            total_tokens += total
+
+        avg_loss = total_loss / len(loader)
+        avg_acc = total_correct / max(1, total_tokens)
+        return avg_loss, avg_acc
 
 
     @torch.no_grad()

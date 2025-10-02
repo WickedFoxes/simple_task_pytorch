@@ -2,9 +2,9 @@ import os
 import re
 from typing import Any, Dict, Optional, Callable, Tuple
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader, Subset
 from torch.nn.utils.rnn import pad_sequence
-from datasets import load_from_disk, load_dataset
+from datasets import load_from_disk
 from transformers import AutoTokenizer
 
 from src.datasets.base import DatasetBase
@@ -92,11 +92,20 @@ def _make_wmt16_collate_fn(src_pad_id, tgt_pad_id, tgt_bos_id):
         return src_list_padded, tgt_in_padded, tgt_out_padded
     return collate_fn
 
+
 @register("dataset", "wmt16_de_en")
 def build_wmt16_dataloaders(cfg: Dict[str, Any], **kwargs) -> Tuple[DataLoader, DataLoader]:
     tokenizer = AutoTokenizer.from_pretrained(cfg.get("pretrained_tokenizer_name", "bert-base-uncased"))
     train_set = WMT16_DE_EN_Wrap.from_config(cfg, tokenizer=tokenizer, train=True)
     val_set   = WMT16_DE_EN_Wrap.from_config(cfg, tokenizer=tokenizer, train=False)
+
+    # train 데이터 길이 제한
+    train_max_len = cfg.get("max_train_data_len", None)
+    valid_max_len = cfg.get("max_valid_data_len", None)
+    if train_max_len is not None and train_max_len < len(train_set):
+        train_set = Subset(train_set, range(train_max_len))
+    if valid_max_len is not None and valid_max_len < len(val_set):
+        val_set = Subset(val_set, range(valid_max_len))
 
     pad_id = getattr(tokenizer, "pad_token_id", None)
     bos_id = getattr(tokenizer, "bos_token_id", None)
@@ -125,3 +134,4 @@ def build_wmt16_dataloaders(cfg: Dict[str, Any], **kwargs) -> Tuple[DataLoader, 
         collate_fn=collate_fn,
     )
     return train_loader, valid_loader
+
