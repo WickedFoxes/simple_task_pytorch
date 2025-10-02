@@ -43,7 +43,7 @@ scheduler:
 loss:
   name: "label_smoothing"
   label_smoothing: 0.1
-  ignore_index: 58100 # tokenizer의 pad_idx
+  ignore_index: 1 # tokenizer의 pad_idx
 
 logger:
   name: "simple"
