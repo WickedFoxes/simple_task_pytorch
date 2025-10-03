@@ -269,15 +269,15 @@ class TransformerTL(ModelBase):
             dropout_p=0.1
     ):
         super().__init__()
-        self.src_tok = nn.Embedding(vocab_size, embed_dim, padding_idx=pad_id)
-        self.tgt_tok = nn.Embedding(vocab_size, embed_dim, padding_idx=pad_id)
+        self.tok = nn.Embedding(vocab_size, embed_dim, padding_idx=pad_id)
         self.pos = PositionalEncoding(embed_dim)
         self.transformer = Transformer(
             embed_dim=embed_dim, num_heads=num_heads,
             num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers,
             feedforward_dim=feedforward_dim, dropout_p=dropout_p, activation=F.relu
         )
-        self.generator = nn.Linear(embed_dim, vocab_size)
+        self.generator = nn.Linear(embed_dim, vocab_size, bias=False)
+        self.generator.weight = self.embedding.weight
         self.pad_id = pad_id
 
 
@@ -285,8 +285,8 @@ class TransformerTL(ModelBase):
         """
         src_ids: (batch, src_len)  tgt_in_ids: (batch, tgt_len)
         """
-        src = self.pos(self.src_tok(src_ids))
-        tgt_in = self.pos(self.tgt_tok(tgt_in_ids))
+        src = self.pos(self.tok(src_ids))
+        tgt_in = self.pos(self.tok(tgt_in_ids))
 
         # 마스크 생성
         src_key_padding_mask = (src_ids == self.pad_id)  # (batch, src_len) True=pad
