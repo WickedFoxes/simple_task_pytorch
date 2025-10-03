@@ -123,7 +123,7 @@ class TranslateTrainer:
             for h in self.hooks:
                 if hasattr(h, "on_validation_end"):
                     h.on_validation_end(
-                        metric=val_acc,
+                        metric=val_loss,
                         epoch=epoch,
                         model=self.model,
                         optimizer=self.opt,
