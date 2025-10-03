@@ -22,6 +22,7 @@ class WMT16_DE_EN_Wrap(DatasetBase):
     ):
         super().__init__()
         self.tokenizer = tokenizer
+        self.max_len = max_len
         if train:
             self.ds = load_from_disk(os.path.join(root, "train"))
         else:
