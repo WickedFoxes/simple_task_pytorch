@@ -37,8 +37,6 @@ class WMT16_DE_EN_Wrap(DatasetBase):
 
         en_encoded = self.tokenizer.encode(en, out_type=int)
         de_encoded = self.tokenizer.encode(de, out_type=int, add_bos=True, add_eos=True)
-        en_ids = torch.tensor(en_encoded, dtype=torch.long) # 다중클래스를 위한 정수 타입
-        de_ids = torch.tensor(de_encoded, dtype=torch.long) # 다중클래스를 위한 정수 타입
         
         # en 길이제한 (Truncate + Pad)
         if len(en_ids) > self.max_len:
@@ -50,6 +48,9 @@ class WMT16_DE_EN_Wrap(DatasetBase):
             # 잘라내되 마지막은 EOS로 강제 설정
             de_ids = de_ids[:self.max_len]
             de_ids[-1] = eos_id
+
+        en_ids = torch.tensor(en_encoded, dtype=torch.long) # 다중클래스를 위한 정수 타입
+        de_ids = torch.tensor(de_encoded, dtype=torch.long) # 다중클래스를 위한 정수 타입
 
     @classmethod
     def from_config(
