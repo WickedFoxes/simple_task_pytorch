@@ -66,7 +66,7 @@ class TranslateTrainer:
                     
                 if hasattr(self.cfg, "log_step") and hasattr(self.logger, "log_metrics"):
                     log_step = self.cfg["log_step"]
-                    if n % log_step == 0:
+                    if (n//batch_size) % log_step == 0:
                         elapsed = time.time() - epoch_start
                         self.logger.log_metrics(
                             {

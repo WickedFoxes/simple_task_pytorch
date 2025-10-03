@@ -60,3 +60,4 @@ checkpoint_saver:
   save_dir: "/content/drive/MyDrive/Colab_sample_checkpoints/transformer_tl/wmt16_de_en"
   save_best: true
   save_last: true
+  mode: "min"
