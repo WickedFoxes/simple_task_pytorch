@@ -73,7 +73,7 @@ class TranslateTrainer:
                                 "step": n//batch_size,
                                 "train_loss": train_loss/n,
                                 "train_acc": train_acc/n,
-                                "lr": float(current_lr) if current_lr is not None else float("nan"),
+                                "lr": float(self.opt.param_groups[0]["lr"]),
                                 "elapsed_time": elapsed,
                             },
                         )
