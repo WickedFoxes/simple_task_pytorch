@@ -3,7 +3,7 @@ device: "cuda"
 
 dataset:
   name: "wmt16_de_en"
-  root: "./data/wmt16_de_en"
+  root: "/content/drive/MyDrive/Colab_sample_data/wmt16_de_en"
   num_workers: 4
   batch_size: 32
   pin_memory: true
@@ -57,6 +57,6 @@ trainer:
   # log_step: 3500
 
 checkpoint_saver:
-  save_dir: "checkpoints/wmt16_de_en/transformer_tl"
+  save_dir: "/content/drive/MyDrive/Colab_sample_checkpoints/transformer_tl/wmt16_de_en"
   save_best: true
   save_last: true
