@@ -54,6 +54,7 @@ trainer:
   amp: true             # mixed precision
   val_interval: 1       # 에폭 단위 검증
   save_best: true
+  log_step: 2
   # log_step: 3500
 
 checkpoint_saver:
