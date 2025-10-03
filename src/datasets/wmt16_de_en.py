@@ -96,7 +96,7 @@ def build_wmt16_dataloaders(cfg: Dict[str, Any], **kwargs) -> Tuple[DataLoader, 
     pad_id = cfg["pad_idx"]
     bos_id = cfg["bos_idx"]
 
-    collate_fn = _make_wmt16_collate_fn(pad_id, pad_id, bos_id)
+    collate_fn = _make_wmt16_collate_fn(pad_id, bos_id)
 
     train_loader = DataLoader(
         train_set,
