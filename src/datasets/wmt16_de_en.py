@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import DataLoader, Subset
 from torch.nn.utils.rnn import pad_sequence
 from datasets import load_from_disk
-from transformers import AutoTokenizer
+import sentencepiece as spm
 
 from src.datasets.base import DatasetBase
 from src.registry import register
@@ -16,12 +16,10 @@ class WMT16_DE_EN_Wrap(DatasetBase):
         self,
         root: str = "./data",
         tokenizer=None,
-        max_len: int = 256,
         train: bool = True,
     ):
         super().__init__()
         self.tokenizer = tokenizer
-        self.max_len = max_len
         if train:
             self.ds = load_from_disk(os.path.join(root, "train"))
         else:
@@ -34,23 +32,10 @@ class WMT16_DE_EN_Wrap(DatasetBase):
         en = self.ds["translation"][idx]["en"]
         de = self.ds["translation"][idx]["de"]
 
-        en_encoded = self.tokenizer(
-            en,
-            add_special_tokens=True,
-            max_length=self.max_len,
-            padding="max_length",   # LSTM 입력을 동일 길이로 맞춤
-            truncation=True
-        )
-        de_encoded = self.tokenizer(
-            de,
-            add_special_tokens=True,
-            max_length=self.max_len,
-            padding="max_length",   # LSTM 입력을 동일 길이로 맞춤
-            truncation=True
-        )
-        
-        en_ids = torch.tensor(en_encoded["input_ids"], dtype=torch.long) # 다중클래스를 위한 정수 타입
-        de_ids = torch.tensor(de_encoded["input_ids"], dtype=torch.long) # 다중클래스를 위한 정수 타입
+        en_encoded = self.tokenizer.encode(en, out_type=int)
+        de_encoded = self.tokenizer.encode(de, out_type=int, add_bos=True, add_eos=True)
+        en_ids = torch.tensor(en_encoded, dtype=torch.long) # 다중클래스를 위한 정수 타입
+        de_ids = torch.tensor(de_encoded, dtype=torch.long) # 다중클래스를 위한 정수 타입
         return en_ids, de_ids
 
     @classmethod
@@ -63,31 +48,30 @@ class WMT16_DE_EN_Wrap(DatasetBase):
         return cls(
             root=cfg.get("root", "./data"),
             tokenizer=tokenizer,
-            max_len=int(cfg.get("max_len", 256)),
             train=train,
         )
 
-def _make_wmt16_collate_fn(src_pad_id, tgt_pad_id, tgt_bos_id):
+def _make_wmt16_collate_fn(pad_id, bos_id):
     def collate_fn(batch):
         src_list, tgt_list = [], []
         for src, tgt in batch:
             src_list.append(src)
             tgt_list.append(tgt)
 
-        src_list_padded = pad_sequence(src_list, batch_first=True, padding_value=src_pad_id)
-        tgt_list_padded = pad_sequence(tgt_list, batch_first=True, padding_value=tgt_pad_id)
+        src_list_padded = pad_sequence(src_list, batch_first=True, padding_value=pad_id)
+        tgt_list_padded = pad_sequence(tgt_list, batch_first=True, padding_value=pad_id)
 
         tgt_in = []
         tgt_out = []
         for t in tgt_list_padded:
-            if len(t) == 0 or t[0] != tgt_bos_id:
-                t = [tgt_bos_id] + list(t)
+            if len(t) == 0 or t[0] != bos_id:
+                t = [bos_id] + list(t)
             # pad를 고려해 동일 길이로 만들기
             tgt_in.append(t[:-1])
             tgt_out.append(t[1:])
         
-        tgt_in_padded = pad_sequence(tgt_in, batch_first=True, padding_value=tgt_pad_id)    # (B, T-1) → 길이 맞추기
-        tgt_out_padded = pad_sequence(tgt_out, batch_first=True, padding_value=tgt_pad_id)  # (B, T-1)
+        tgt_in_padded = pad_sequence(tgt_in, batch_first=True, padding_value=pad_id)    # (B, T-1) → 길이 맞추기
+        tgt_out_padded = pad_sequence(tgt_out, batch_first=True, padding_value=pad_id)  # (B, T-1)
 
         return src_list_padded, tgt_in_padded, tgt_out_padded
     return collate_fn
@@ -95,7 +79,9 @@ def _make_wmt16_collate_fn(src_pad_id, tgt_pad_id, tgt_bos_id):
 
 @register("dataset", "wmt16_de_en")
 def build_wmt16_dataloaders(cfg: Dict[str, Any], **kwargs) -> Tuple[DataLoader, DataLoader]:
-    tokenizer = AutoTokenizer.from_pretrained(cfg.get("pretrained_tokenizer_name", "Helsinki-NLP/opus-mt-en-de"))
+    # tokenizer = AutoTokenizer.from_pretrained(cfg.get("pretrained_tokenizer_name", "Helsinki-NLP/opus-mt-en-de"))
+    tokenizer = spm.SentencePieceProcessor()
+    tokenizer.load(cfg["tokenizer_dir"])
     train_set = WMT16_DE_EN_Wrap.from_config(cfg, tokenizer=tokenizer, train=True)
     val_set   = WMT16_DE_EN_Wrap.from_config(cfg, tokenizer=tokenizer, train=False)
 
@@ -107,13 +93,8 @@ def build_wmt16_dataloaders(cfg: Dict[str, Any], **kwargs) -> Tuple[DataLoader, 
     if valid_max_len is not None and valid_max_len < len(val_set):
         val_set = Subset(val_set, range(valid_max_len))
 
-    pad_id = getattr(tokenizer, "pad_token_id", None)
-    bos_id = getattr(tokenizer, "bos_token_id", None)
-
-    if pad_id is None:
-        pad_id = tokenizer.get_vocab().get("<pad>", 1)
-    if bos_id is None:
-        bos_id = tokenizer.get_vocab().get("<s>", 1)
+    pad_id = cfg["pad_idx"]
+    bos_id = cfg["bos_idx"]
 
     collate_fn = _make_wmt16_collate_fn(pad_id, pad_id, bos_id)
 

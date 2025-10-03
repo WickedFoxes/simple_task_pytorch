@@ -33,6 +33,13 @@ class CheckpointSaver(Hook):
             save(path, model, optimizer, scheduler, epoch, best_metric=self.best)
             self.last_path = path
 
+    def on_step_end(self, model, optimizer, scheduler, epoch, **kw):
+        # last 저장
+        if self.save_last:
+            path = os.path.join(self.save_dir, "last.ckpt")
+            save(path, model, optimizer, scheduler, epoch, best_metric=self.best)
+            self.last_path = path
+
     def on_train_end(self, model, optimizer, scheduler, epoch, **kw):
         # 종료 시점에 마지막 스냅샷을 한 번 더(선택)
         if self.save_last and self.last_path is None:

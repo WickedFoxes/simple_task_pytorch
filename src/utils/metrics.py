@@ -1,4 +1,6 @@
 from sklearn.metrics import classification_report, confusion_matrix, f1_score
+from nltk.translate.bleu_score import corpus_bleu
+
 
 def compute_f1(y_true, y_pred, average="macro"):
     return f1_score(y_true, y_pred, average=average)

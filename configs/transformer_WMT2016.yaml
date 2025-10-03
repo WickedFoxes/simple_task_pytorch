@@ -4,27 +4,27 @@ device: "cuda"
 dataset:
   name: "wmt16_de_en"
   root: "./data/wmt16_de_en"
-  pretrained_tokenizer_name: "FacebookAI/xlm-roberta-base"
   num_workers: 4
   batch_size: 32
   pin_memory: true
-  max_len: 128
-  # max_train_data_len: 320
-  # max_eval_data_len: 32
+  max_train_data_len: 320
+  max_eval_data_len: 32
+  tokenizer_dir: "/content/drive/MyDrive/Colab_sample_data/wmt16_de_en/spm37k.model"
+  pad_idx: 3
+  bos_idx: 1
 
 
 model:
   name: "transformer_tl"
-  src_vocab_size: 250002 # tokenizer의 vocab_size
-  tgt_vocab_size: 250002 # tokenizer의 vocab_size
-  src_pad_id: 1 # tokenizer의 pad_idx
-  tgt_pad_id: 1 # tokenizer의 pad_idx
-  embed_dim: 128
-  num_heads: 4
-  num_encoder_layers: 3
-  num_decoder_layers: 3
+  src_vocab_size: 37000 # tokenizer의 vocab_size
+  tgt_vocab_size: 37000 # tokenizer의 vocab_size
+  pad_id: 3 # tokenizer의 pad_idx
+  embed_dim: 512
+  num_heads: 8
+  num_encoder_layers: 6
+  num_decoder_layers: 6
   dropout_p: 0.1
-  feedforward_dim: 512
+  feedforward_dim: 2048
 
 optimizer:
   name: "adamw"
@@ -34,15 +34,15 @@ optimizer:
 scheduler:
   name: "cosine_schedule_with_warmup"
   num_cycles: 1  
-  num_warmup_steps: 35538
-  num_training_steps: 710760
-  # num_warmup_steps: 5
-  # num_training_steps: 50
+  # num_warmup_steps: 35538
+  # num_training_steps: 710760
+  num_warmup_steps: 5
+  num_training_steps: 50
   
 loss:
   name: "label_smoothing"
   label_smoothing: 0.1
-  ignore_index: 1 # tokenizer의 pad_idx
+  ignore_index: 3 # tokenizer의 pad_idx
 
 logger:
   name: "simple"
@@ -54,8 +54,9 @@ trainer:
   amp: true             # mixed precision
   val_interval: 1       # 에폭 단위 검증
   save_best: true
+  # log_step: 3500
 
 checkpoint_saver:
   save_dir: "checkpoints/wmt16_de_en/transformer_tl"
   save_best: true
-  save_last: false
+  save_last: true

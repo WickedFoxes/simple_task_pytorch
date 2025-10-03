@@ -3,3 +3,4 @@ class Hook:
     def on_epoch_end(self, **kw): pass
     def on_validation_end(self, **kw): pass
     def on_train_end(self, **kw): pass
+    def on_step_end(self, **kw): pass

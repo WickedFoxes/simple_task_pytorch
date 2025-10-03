@@ -12,7 +12,6 @@ class TranslateTrainer:
         self.scaler = GradScaler(enabled=self.cfg.get("amp", True))
         self.batch_aug = batch_aug
 
-
     def train(self, train_loader, val_loader, criterion, device):
         self.model.to(device)
 
@@ -64,6 +63,28 @@ class TranslateTrainer:
                 train_loss += loss.item() * batch_size
                 train_acc  += self.accuracy(logits, tgt_out_ids, criterion=criterion) * batch_size
                 n += batch_size
+                    
+                if hasattr(self.cfg, "log_step") and hasattr(self.logger, "log_metrics"):
+                    log_step = self.cfg["log_step"]
+                    if n % log_step == 0:
+                        elapsed = time.time() - epoch_start
+                        self.logger.log_metrics(
+                            {
+                                "step": n//batch_size,
+                                "train_loss": train_loss/n,
+                                "train_acc": train_acc/n,
+                                "lr": float(current_lr) if current_lr is not None else float("nan"),
+                                "elapsed_time": elapsed,
+                            },
+                        )
+                        for h in self.hooks:
+                            if hasattr(h, "on_step_end"):
+                                h.on_step_end(
+                                    model=self.model,
+                                    optimizer=self.opt,
+                                    scheduler=self.sched,
+                                    epoch=epoch,
+                                )
 
             train_loss /= n; train_acc /= n
             current_lr = self.opt.param_groups[0]["lr"]
