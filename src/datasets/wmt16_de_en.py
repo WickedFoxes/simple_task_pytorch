@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader, Subset
 from torch.nn.utils.rnn import pad_sequence
 from datasets import load_from_disk
 import sentencepiece as spm
+import torch.nn.functional as F
 
 from src.datasets.base import DatasetBase
 from src.registry import register
@@ -17,6 +18,7 @@ class WMT16_DE_EN_Wrap(DatasetBase):
         root: str = "./data",
         tokenizer=None,
         train: bool = True,
+        max_len: int = 256,
     ):
         super().__init__()
         self.tokenizer = tokenizer
@@ -36,7 +38,23 @@ class WMT16_DE_EN_Wrap(DatasetBase):
         de_encoded = self.tokenizer.encode(de, out_type=int, add_bos=True, add_eos=True)
         en_ids = torch.tensor(en_encoded, dtype=torch.long) # 다중클래스를 위한 정수 타입
         de_ids = torch.tensor(de_encoded, dtype=torch.long) # 다중클래스를 위한 정수 타입
-        return en_ids, de_ids
+        
+        # en 길이제한 (Truncate + Pad)
+        if len(en_ids) > self.max_len:
+            en_ids = en_ids[:self.max_len]
+        else:
+            pad_len = self.max_len - len(en_ids)
+            en_ids = F.pad(en_ids, (0, pad_len), value=self.pad_id)
+
+        # de 길이제한 (Truncate + EOS + Pad)
+        if len(de_ids) >= self.max_len:
+            # 잘라내되 마지막은 EOS로 강제 설정
+            de_ids = de_ids[:self.max_len]
+            de_ids[-1] = self.eos_id
+        else:
+            # EOS 이후 PAD 채우기
+            pad_len = self.max_len - len(de_ids)
+            de_ids = F.pad(de_ids, (0, pad_len), value=self.pad_id)
 
     @classmethod
     def from_config(

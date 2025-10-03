@@ -22,27 +22,22 @@ from src.registry import register
 from src.models.base import ModelBase
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, d_embed):
+    def __init__(self, d_embed, max_len=256):
         super(PositionalEncoding, self).__init__()
-        self.d_embed = d_embed
+        encoding = torch.zeros(max_len, d_embed)
+        position = torch.arange(0, max_len).float().unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_embed, 2) * -(math.log(10000.0) / d_embed))
+        encoding[:, 0::2] = torch.sin(position * div_term)
+        encoding[:, 1::2] = torch.cos(position * div_term)
+
+        # register_buffer -> 학습 파라미터는 아니지만 디바이스 이동 가능
+        self.register_buffer("encoding", encoding.unsqueeze(0))
 
     def forward(self, x):
-        """
-        x: [batch_size, seq_len, d_embed]
-        """
-        batch_size, seq_len, _ = x.size()
-        device = x.device
-
-        position = torch.arange(0, seq_len, device=device).float().unsqueeze(1)  # [seq_len, 1]
-        div_term = torch.exp(torch.arange(0, self.d_embed, 2, device=device).float() * 
-                             -(math.log(10000.0) / self.d_embed))
-
-        pe = torch.zeros(seq_len, self.d_embed, device=device)
-        pe[:, 0::2] = torch.sin(position * div_term)
-        pe[:, 1::2] = torch.cos(position * div_term)
-
-        pe = pe.unsqueeze(0)  # [1, seq_len, d_embed]
-        return x + pe
+        _, seq_len, _ = x.size()
+        pos_embed = self.encoding[:, :seq_len, :]
+        out = x + pos_embed
+        return out
 
 
 def scaled_dot_product_attention(
@@ -265,17 +260,18 @@ class TransformerTL(ModelBase):
     def __init__(
             self, 
             vocab_size: int, 
-            pad_id: int, 
+            pad_id: int,
             embed_dim: int, 
             num_heads: int,
             num_encoder_layers=6, 
             num_decoder_layers=6, 
             feedforward_dim=2048, 
-            dropout_p=0.1
+            dropout_p=0.1,
+            max_len: int = 256,
     ):
         super().__init__()
         self.tok = nn.Embedding(vocab_size, embed_dim, padding_idx=pad_id)
-        self.pos = PositionalEncoding(embed_dim)
+        self.pos = PositionalEncoding(embed_dim, max_len)
         self.transformer = Transformer(
             embed_dim=embed_dim, num_heads=num_heads,
             num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers,
