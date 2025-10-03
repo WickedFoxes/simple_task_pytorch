@@ -22,22 +22,27 @@ from src.registry import register
 from src.models.base import ModelBase
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, d_embed, max_len=256):
+    def __init__(self, d_embed):
         super(PositionalEncoding, self).__init__()
-        encoding = torch.zeros(max_len, d_embed)
-        position = torch.arange(0, max_len).float().unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_embed, 2) * -(math.log(10000.0) / d_embed))
-        encoding[:, 0::2] = torch.sin(position * div_term)
-        encoding[:, 1::2] = torch.cos(position * div_term)
-
-        # register_buffer -> 학습 파라미터는 아니지만 디바이스 이동 가능
-        self.register_buffer("encoding", encoding.unsqueeze(0))
+        self.d_embed = d_embed
 
     def forward(self, x):
-        _, seq_len, _ = x.size()
-        pos_embed = self.encoding[:, :seq_len, :]
-        out = x + pos_embed
-        return out
+        """
+        x: [batch_size, seq_len, d_embed]
+        """
+        batch_size, seq_len, _ = x.size()
+        device = x.device
+
+        position = torch.arange(0, seq_len, device=device).float().unsqueeze(1)  # [seq_len, 1]
+        div_term = torch.exp(torch.arange(0, self.d_embed, 2, device=device).float() * 
+                             -(math.log(10000.0) / self.d_embed))
+
+        pe = torch.zeros(seq_len, self.d_embed, device=device)
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+
+        pe = pe.unsqueeze(0)  # [1, seq_len, d_embed]
+        return x + pe
 
 
 def scaled_dot_product_attention(
