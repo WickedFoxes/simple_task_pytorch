@@ -276,8 +276,8 @@ class TransformerTL(ModelBase):
             num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers,
             feedforward_dim=feedforward_dim, dropout_p=dropout_p, activation=F.relu
         )
-        self.generator = nn.Linear(embed_dim, vocab_size)
-        # self.generator.weight = self.tok.weight
+        self.generator = nn.Linear(embed_dim, vocab_size, bias=False)
+        self.generator.weight = self.tok.weight
         self.pad_id = pad_id
 
 
@@ -326,7 +326,7 @@ class TransformerTL(ModelBase):
         """
         B, T = tgt_key_padding.size()
         dev = tgt_key_padding.device
-        dtype = self.tgt_tok.weight.dtype
+        dtype = self.tok.weight.dtype
 
         # Look-ahead (upper triangular) : True=mask
         subsequent = torch.triu( # 상삼각행렬 생성, 오른쪽이 마스킹됨
