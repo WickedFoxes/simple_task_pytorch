@@ -277,7 +277,7 @@ class TransformerTL(ModelBase):
             feedforward_dim=feedforward_dim, dropout_p=dropout_p, activation=F.relu
         )
         self.generator = nn.Linear(embed_dim, vocab_size, bias=False)
-        self.generator.weight = self.embedding.weight
+        self.generator.weight = self.tok.weight
         self.pad_id = pad_id
 
 
