@@ -16,8 +16,7 @@ dataset:
 
 model:
   name: "transformer_tl"
-  src_vocab_size: 37000 # tokenizer의 vocab_size
-  tgt_vocab_size: 37000 # tokenizer의 vocab_size
+  vocab_size: 37000 # tokenizer의 vocab_size
   pad_id: 3 # tokenizer의 pad_idx
   embed_dim: 512
   num_heads: 8
