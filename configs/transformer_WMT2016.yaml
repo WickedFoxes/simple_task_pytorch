@@ -53,7 +53,8 @@ trainer:
   amp: true             # mixed precision
   val_interval: 1       # 에폭 단위 검증
   save_best: true
-  log_step: 3500
+  log_step: 2
+  # log_step: 3500
 
 checkpoint_saver:
   save_dir: "/content/drive/MyDrive/Colab_sample_checkpoints/transformer_tl/wmt16_de_en"
