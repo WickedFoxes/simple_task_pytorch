@@ -43,19 +43,13 @@ class WMT16_DE_EN_Wrap(DatasetBase):
         # en 길이제한 (Truncate + Pad)
         if len(en_ids) > self.max_len:
             en_ids = en_ids[:self.max_len]
-        else:
-            pad_len = self.max_len - len(en_ids)
-            en_ids = F.pad(en_ids, (0, pad_len), value=self.pad_id)
 
         # de 길이제한 (Truncate + EOS + Pad)
         if len(de_ids) >= self.max_len:
+            eos_id = de_ids[-1]
             # 잘라내되 마지막은 EOS로 강제 설정
             de_ids = de_ids[:self.max_len]
-            de_ids[-1] = self.eos_id
-        else:
-            # EOS 이후 PAD 채우기
-            pad_len = self.max_len - len(de_ids)
-            de_ids = F.pad(de_ids, (0, pad_len), value=self.pad_id)
+            de_ids[-1] = eos_id
 
     @classmethod
     def from_config(
@@ -98,7 +92,6 @@ def _make_wmt16_collate_fn(pad_id, bos_id):
 
 @register("dataset", "wmt16_de_en")
 def build_wmt16_dataloaders(cfg: Dict[str, Any], **kwargs) -> Tuple[DataLoader, DataLoader]:
-    # tokenizer = AutoTokenizer.from_pretrained(cfg.get("pretrained_tokenizer_name", "Helsinki-NLP/opus-mt-en-de"))
     tokenizer = spm.SentencePieceProcessor()
     tokenizer.load(cfg["tokenizer_dir"])
     train_set = WMT16_DE_EN_Wrap.from_config(cfg, tokenizer=tokenizer, train=True)
