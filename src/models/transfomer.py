@@ -311,7 +311,7 @@ class TransformerTL(ModelBase):
         """
         B, S = src_key_padding.shape
         dev = src_key_padding.device
-        dtype = self.src_tok.weight.dtype  # model float dtype
+        dtype = self.tok.weight.dtype  # model float dtype
 
         mask_bool = src_key_padding.unsqueeze(1).unsqueeze(2)  # (B,1,1,S), bool
         minus_inf = torch.tensor(float('-inf'), device=dev, dtype=dtype)
