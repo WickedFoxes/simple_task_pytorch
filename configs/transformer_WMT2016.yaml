@@ -10,8 +10,8 @@ dataset:
   tokenizer_dir: "/content/drive/MyDrive/Colab_sample_data/wmt16_de_en/spm37k.model"
   pad_idx: 3
   bos_idx: 1
-  max_train_data_len: 320
-  max_eval_data_len: 32
+  # max_train_data_len: 320
+  # max_eval_data_len: 32
 
 
 model:
@@ -33,10 +33,10 @@ optimizer:
 scheduler:
   name: "cosine_schedule_with_warmup"
   num_cycles: 0.5
-  # num_warmup_steps: 35538
-  # num_training_steps: 710760
-  num_warmup_steps: 5
-  num_training_steps: 50
+  num_warmup_steps: 35538
+  num_training_steps: 710760
+  # num_warmup_steps: 5
+  # num_training_steps: 50
   
 loss:
   name: "label_smoothing"
@@ -53,8 +53,9 @@ trainer:
   amp: true             # mixed precision
   val_interval: 1       # 에폭 단위 검증
   save_best: true
-  log_step: 2
-  # log_step: 3500
+  log_step: 7000  
+  # log_step: 2
+  
 
 checkpoint_saver:
   save_dir: "/content/drive/MyDrive/Colab_sample_checkpoints/transformer_tl/wmt16_de_en"
