@@ -1,6 +1,9 @@
 seed: 42
 device: "cuda"
 
+checkpoint_loader:
+  path: "/content/drive/MyDrive/Colab_sample_checkpoints/transformer_tl/wmt16_de_en/epoch003.ckpt"
+
 dataset:
   name: "wmt16_de_en"
   root: "/content/drive/MyDrive/Colab_sample_data/wmt16_de_en"

@@ -27,6 +27,8 @@ if __name__ == '__main__':
     cfg = OmegaConf.load(args.cfg)
     set_seed(cfg.seed)
 
+    device = cfg.device if torch.cuda.is_available() else "cpu"
+    
     # 1) 증강
     train_tf = build_transform(getattr(getattr(cfg, "augment", None), "train", []))
     eval_tf  = build_transform(getattr(getattr(cfg, "augment", None), "eval", [])) 
@@ -66,12 +68,22 @@ if __name__ == '__main__':
     )
 
 
+    if hasattr(cfg, "checkpoint_loader"):
+        ckp_path = cfg.checkpoint_loader.path
+        checkpoint = torch.load(ckp_path, map_location=device)
+        model.load_state_dict(checkpoint["model"])
+        if checkpoint["optimizer"] is not None:
+            optimizer.load_state_dict(checkpoint["optimizer"])
+
+        if checkpoint["scheduler"] is not None:
+            scheduler.load_state_dict(checkpoint["scheduler"])
+
+
     # 4) 로거
     logger = build(
         "logger", cfg.logger.name, 
         **{k:v for k,v in cfg.logger.items() if k!="name"}
     )
-
     
     hooks = [CheckpointSaver(**cfg.checkpoint_saver)]
     if hasattr(cfg, "early_stop"):
@@ -92,7 +104,5 @@ if __name__ == '__main__':
         **{k:v for k,v in cfg.loss.items() if k!="name"}
     )
 
-    device = cfg.device if torch.cuda.is_available() else "cpu"
     trainer.train(train_loader, val_loader, criterion, device)
-
     logger.finalize(status="success")
