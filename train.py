@@ -54,6 +54,7 @@ if __name__ == '__main__':
         "model", cfg.model.name, 
         **{k:v for k,v in cfg.model.items() if k!="name"}
     )
+    model.to(device)
 
     optimizer = build(
         "optimizer", cfg.optimizer.name, 

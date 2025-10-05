@@ -16,7 +16,6 @@ dataset:
   # max_train_data_len: 320
   # max_eval_data_len: 32
 
-
 model:
   name: "transformer_tl"
   vocab_size: 37000 # tokenizer의 vocab_size
