@@ -366,7 +366,7 @@ class TransformerTL(ModelBase):
         for _ in range(max_len - 1):
             tgt_emb = self.pos(self.tok(tgt_in))
             tgt_mask = self.make_tgt_mask(tgt_in == self.pad_id)
-            hidden = self.transformer.decoder(tgt_emb, memory, tgt_mask=tgt_mask, memory_mask=src_mask)
+            hidden = self.transformer.decoder(tgt_emb, memory, self_attn_mask=tgt_mask, cross_attn_mask=src_mask)
             logits = self.generator(hidden[:, -1, :])  # 마지막 단어의 logits만 사용
             next_token = logits.argmax(-1, keepdim=True)  # Greedy
             tgt_in = torch.cat([tgt_in, next_token], dim=1)
