@@ -361,12 +361,12 @@ class TransformerTL(ModelBase):
         # src 인코딩 미리 계산 (성능 개선)
         src = self.pos(self.tok(src_ids))
         src_mask = self.make_src_mask(src_ids == self.pad_id)
-        memory = self.transformer.encode(src, src_mask)
+        memory = self.transformer.encoder(src, src_mask)
 
         for _ in range(max_len - 1):
             tgt_emb = self.pos(self.tok(tgt_in))
             tgt_mask = self.make_tgt_mask(tgt_in == self.pad_id)
-            hidden = self.transformer.decode(tgt_emb, memory, tgt_mask=tgt_mask, memory_mask=src_mask)
+            hidden = self.transformer.decoder(tgt_emb, memory, tgt_mask=tgt_mask, memory_mask=src_mask)
             logits = self.generator(hidden[:, -1, :])  # 마지막 단어의 logits만 사용
             next_token = logits.argmax(-1, keepdim=True)  # Greedy
             tgt_in = torch.cat([tgt_in, next_token], dim=1)
