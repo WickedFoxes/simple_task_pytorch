@@ -281,7 +281,6 @@ class TransformerTL(ModelBase):
         self.generator.weight = self.tok.weight
         self.pad_id = pad_id
 
-
     def forward(self, src_ids, tgt_in_ids):
         """
         src_ids: (batch, src_len)  tgt_in_ids: (batch, tgt_len)
@@ -319,7 +318,6 @@ class TransformerTL(ModelBase):
         zero = torch.tensor(0.0, device=dev, dtype=dtype)
         return torch.where(mask_bool, minus_inf, zero)  # (B,1,1,S)
 
-
     def make_tgt_mask(self, tgt_key_padding: torch.Tensor):
         """
         look-ahead + pad mask (additive float mask)
@@ -341,3 +339,40 @@ class TransformerTL(ModelBase):
         minus_inf = torch.tensor(float('-inf'), device=dev, dtype=dtype)
         zero = torch.tensor(0.0, device=dev, dtype=dtype)
         return torch.where(combined_bool, minus_inf, zero)  # (B,1,T,T)
+
+    @torch.no_grad()
+    def generate(
+        self,
+        src_ids: torch.Tensor,     # (batch, src_len)
+        bos_id: int,
+        eos_id: int,
+        max_len: int = 256,
+    ):
+        """
+        Greedy decoding 방식의 auto-regressive generation
+        """
+        self.eval()
+        device = src_ids.device
+        batch_size = src_ids.size(0)
+
+        # 초기 입력: <bos> 토큰
+        tgt_in = torch.full((batch_size, 1), bos_id, dtype=torch.long, device=device)
+
+        # src 인코딩 미리 계산 (성능 개선)
+        src = self.pos(self.tok(src_ids))
+        src_mask = self.make_src_mask(src_ids == self.pad_id)
+        memory = self.transformer.encode(src, src_mask)
+
+        for _ in range(max_len - 1):
+            tgt_emb = self.pos(self.tok(tgt_in))
+            tgt_mask = self.make_tgt_mask(tgt_in == self.pad_id)
+            hidden = self.transformer.decode(tgt_emb, memory, tgt_mask=tgt_mask, memory_mask=src_mask)
+            logits = self.generator(hidden[:, -1, :])  # 마지막 단어의 logits만 사용
+            next_token = logits.argmax(-1, keepdim=True)  # Greedy
+            tgt_in = torch.cat([tgt_in, next_token], dim=1)
+
+            # 모든 배치가 eos_id에 도달하면 중단
+            if (next_token == eos_id).all():
+                break
+
+        return tgt_in
