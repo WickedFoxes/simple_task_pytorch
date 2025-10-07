@@ -1,4 +1,4 @@
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 from torchvision.datasets import CIFAR100
 from src.registry import register
 from .base import DatasetBase
@@ -26,6 +26,14 @@ def build_cifar100_dataloaders(cfg, train_tf, eval_tf):
     # 통일된 DataLoader 생성 함수 (원한다면 레지스트리에 등록)
     train_set = CIFAR100Wrap.from_config(cfg, transform=train_tf, train=True)
     val_set   = CIFAR100Wrap.from_config(cfg, transform=eval_tf, train=False)
+
+    # train 데이터 길이 제한
+    train_max_len = cfg.get("max_train_data_len", None)
+    valid_max_len = cfg.get("max_valid_data_len", None)
+    if train_max_len is not None and train_max_len < len(train_set):
+        train_set = Subset(train_set, range(train_max_len))
+    if valid_max_len is not None and valid_max_len < len(val_set):
+        val_set = Subset(val_set, range(valid_max_len))
 
     return (
       DataLoader(train_set, batch_size=cfg["batch_size"], shuffle=True,

@@ -7,7 +7,7 @@ device: "cuda"
 dataset:
   name: "cifar100"
   root: "/content/drive/MyDrive/Colab_sample_data/cifar100"
-  num_workers: 4
+  num_workers: 8
   batch_size: 256
   pin_memory: true
   max_train_data_len: 2560
