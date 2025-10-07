@@ -5,17 +5,11 @@
 # - https://nlp.seas.harvard.edu/2018/04/03/attention.html
 # - https://wikidocs.net/31379
 
-import copy
-import warnings
 import math
-from typing import Any, Callable, Optional, Union
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import Tensor
-from torch.nn.init import xavier_uniform_, xavier_normal_, constant_
-from torch.nn.modules.linear import NonDynamicallyQuantizableLinear
 from torch.nn.modules.container import ModuleList
 
 from src.registry import register

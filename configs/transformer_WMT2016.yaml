@@ -1,8 +1,8 @@
 seed: 42
 device: "cuda"
 
-checkpoint_loader:
-  path: "/content/drive/MyDrive/Colab_sample_checkpoints/transformer_tl/wmt16_de_en/epoch003.ckpt"
+# checkpoint_loader:
+#   path: "/content/drive/MyDrive/Colab_sample_checkpoints/transformer_tl/wmt16_de_en/epoch003.ckpt"
 
 dataset:
   name: "wmt16_de_en"
@@ -11,8 +11,9 @@ dataset:
   batch_size: 32
   pin_memory: true
   tokenizer_dir: "/content/drive/MyDrive/Colab_sample_data/wmt16_de_en/spm37k.model"
-  pad_idx: 3
   bos_idx: 1
+  eos_idx: 2
+  pad_idx: 3
   # max_train_data_len: 320
   # max_eval_data_len: 32
 
@@ -32,6 +33,7 @@ optimizer:
   name: "adamw"
   lr: 3e-4
   weight_decay: 0.01
+  betas: [0.9, 0.999]
 
 scheduler:
   name: "cosine_schedule_with_warmup"
@@ -58,7 +60,6 @@ trainer:
   save_best: true
   log_step: 7000  
   # log_step: 2
-  
 
 checkpoint_saver:
   save_dir: "/content/drive/MyDrive/Colab_sample_checkpoints/transformer_tl/wmt16_de_en"
