@@ -14,7 +14,8 @@ from torch.nn.modules.container import ModuleList
 from src.registry import register
 from src.models.base import ModelBase
 
-class VisionTransformer(nn.Module):
+@register("model", "ViT")
+class VisionTransformer(ModelBase):
     """Vision Transformer as per https://arxiv.org/abs/2010.11929."""
 
     def __init__(
@@ -137,6 +138,24 @@ class VisionTransformer(nn.Module):
 
         return x
 
+    def replace_head(self, new_num_classes, representation_size=None):
+        """사전학습된 본체는 유지, 분류 head만 교체."""
+        hidden_dim = self.hidden_dim
+        if representation_size is None:
+            self.heads = nn.Sequential(nn.Linear(hidden_dim, new_num_classes))
+            nn.init.zeros_(self.heads[0].weight)
+            nn.init.zeros_(self.heads[0].bias)
+        else:
+            # 사전학습 때 representation_size를 썼다면 동일하게 구성
+            self.heads = nn.Sequential(
+                nn.Linear(hidden_dim, representation_size),
+                nn.Tanh(),
+                nn.Linear(representation_size, new_num_classes),
+            )
+            for m in self.heads.modules():
+                if isinstance(m, nn.Linear):
+                    nn.init.trunc_normal_(m.weight, std=(1 / m.in_features) ** 0.5)
+                    nn.init.zeros_(m.bias)
 
 class Encoder(nn.Module):
     """Transformer Model Encoder for sequence to sequence translation."""
@@ -361,30 +380,3 @@ class MultiheadAttention(nn.Module):
         out = self.out_proj(attn_out)  # (B, L, D)
         return out
     
-
-@register("model", "ViT")
-class ViT(VisionTransformer, ModelBase):
-    def __init__():
-        super().__init__()
-        
-    def forward(self, x):
-        return self(x)
-    
-    def replace_head(self, new_num_classes, representation_size=None):
-        """사전학습된 본체는 유지, 분류 head만 교체."""
-        hidden_dim = self.hidden_dim
-        if representation_size is None:
-            self.heads = nn.Sequential(nn.Linear(hidden_dim, new_num_classes))
-            nn.init.zeros_(self.heads[0].weight)
-            nn.init.zeros_(self.heads[0].bias)
-        else:
-            # 사전학습 때 representation_size를 썼다면 동일하게 구성
-            self.heads = nn.Sequential(
-                nn.Linear(hidden_dim, representation_size),
-                nn.Tanh(),
-                nn.Linear(representation_size, new_num_classes),
-            )
-            for m in self.heads.modules():
-                if isinstance(m, nn.Linear):
-                    nn.init.trunc_normal_(m.weight, std=(1 / m.in_features) ** 0.5)
-                    nn.init.zeros_(m.bias)
