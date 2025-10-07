@@ -212,7 +212,7 @@ class EncoderBlock(nn.Module):
 
         # Attention block
         self.ln_1 = norm_layer(hidden_dim)
-        self.self_attention = MultiheadAttention(num_heads, hidden_dim, dropout=attention_dropout)
+        self.self_attention = MultiheadAttention(num_heads, hidden_dim, dropout_p=attention_dropout)
         self.dropout = nn.Dropout(dropout)
 
         # MLP block
