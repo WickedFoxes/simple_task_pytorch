@@ -12,7 +12,6 @@ class ClassifierTrainer:
         self.scaler = GradScaler(enabled=self.cfg.get("amp", True))
         self.batch_aug = batch_aug
 
-
     def train(self, train_loader, val_loader, criterion, device):
         total_params = sum(p.numel() for p in self.model.parameters())
         self.logger.log_params({"total_params": total_params})
@@ -66,14 +65,14 @@ class ClassifierTrainer:
                 
                 if hasattr(self.cfg, "log_step") and hasattr(self.logger, "log_metrics"):
                     log_step = self.cfg["log_step"]
-                    if n % log_step == 0:
+                    if (n//batch_size) % log_step == 0:
                         elapsed = time.time() - epoch_start
                         self.logger.log_metrics(
                             {
                                 "step": n//batch_size,
                                 "train_loss": train_loss/n,
                                 "train_acc": train_acc/n,
-                                "lr": float(current_lr) if current_lr is not None else float("nan"),
+                                "lr": float(self.opt.param_groups[0]["lr"]),
                                 "elapsed_time": elapsed,
                             },
                         )
