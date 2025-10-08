@@ -74,7 +74,7 @@ trainer:
   log_step: 50  
   
 checkpoint_saver:
-  save_dir: "/content/drive/MyDrive/Colab_sample_checkpoints/ViT/cifar100"
+  save_dir: "/content/drive/MyDrive/Colab_sample_checkpoints/ViT_small/cifar100"
   save_best: true
   save_last: true
   mode: "max"
