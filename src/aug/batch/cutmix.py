@@ -36,7 +36,7 @@ class CutMix(BatchAugBase):
 
     def __call__(self, x, y):
         # 레이블을 [B, C]로 통일
-        y = self._to_one_hot(y, self.num_classes)  # [B, C]
+        y = self._to_one_hot(y)  # [B, C]
 
         if (random.random() > self.p) or (self.alpha <= 0):
             # 미적용 시에도 [B, C] 유지
