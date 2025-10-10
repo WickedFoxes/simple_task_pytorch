@@ -36,7 +36,6 @@ def linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps)
 def cosine_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, num_cycles=1):
     return get_cosine_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, num_cycles)
 
-
 @register("scheduler", "reduce_lr_on_plateau")
 def Reduce_lr_on_plateau(
     optimizer, 

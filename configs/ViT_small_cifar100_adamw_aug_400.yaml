@@ -68,7 +68,7 @@ logger:
 
 trainer:
   name : "classifier_trainer"
-  epochs: 200
+  epochs: 400
   grad_clip: 1.0
   amp: true             # mixed precision
   val_interval: 1       # 에폭 단위 검증
