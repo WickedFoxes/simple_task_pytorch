@@ -10,11 +10,11 @@ from src.aug.batch.cutmix import CutMix
 @register("batch_aug", "mixcut")
 class MixCut(BatchAugBase):
     """ mixup/cutmix를 확률로 스위칭 (항상 [B, C] 레이블 반환) """
-    def __init__(self, mixup_alpha=0.2, cutmix_alpha=1.0, p=1.0, switch_prob=0.5, num_classes=None):
+    def __init__(self, mixup_alpha=0.2, cutmix_alpha=1.0, p=1.0, switch_prob=0.5, num_classes=100):
         super().__init__(p)
         # 내부에서 [B, C] 레이블을 만들 수 있도록 num_classes 전달
-        self.mix = Mixup(alpha=mixup_alpha, p=1.0, num_classes=num_classes)
-        self.cut = CutMix(alpha=cutmix_alpha, p=1.0, num_classes=num_classes)
+        self.mix = Mixup(alpha=mixup_alpha, p=p, num_classes=num_classes)
+        self.cut = CutMix(alpha=cutmix_alpha, p=p, num_classes=num_classes)
         self.switch_prob = switch_prob
         self.num_classes = num_classes
 

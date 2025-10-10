@@ -8,6 +8,13 @@ _AUG_MAP = {
   "RandAugment": lambda **p: transforms.RandAugment(num_ops=p.get("n",2), magnitude=p.get("m",9)),
   "ToTensor": lambda **p: transforms.ToTensor(),
   "Normalize": lambda **p: transforms.Normalize(p["mean"], p["std"]),
+  "RandomErasing": lambda **p: transforms.RandomErasing(
+      p.get("p", 0.5), 
+      scale=p.get("scale", (0.02, 0.33)),
+      ratio=p.get("ratio", (0.3, 3.3)),
+      value=p.get("value", 0),
+      inplace=p.get("inplace", False)
+  ),
 }
 
 def build_transform(pipes: list):
