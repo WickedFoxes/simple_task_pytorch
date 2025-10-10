@@ -1,0 +1,82 @@
+seed: 42
+device: "cuda"
+
+# checkpoint_loader:
+#   path: "/content/drive/MyDrive/Colab_sample_checkpoints/transformer_tl/wmt16_de_en/epoch003.ckpt"
+
+dataset:
+  name: "cifar100"
+  root: "/content/drive/MyDrive/Colab_sample_data/cifar100"
+  num_workers: 8
+  batch_size: 256
+  pin_memory: true
+  # max_train_data_len: 2560
+  # max_eval_data_len: 256
+
+model:
+  name: "ViT"
+  image_size: 32
+  patch_size: 4
+  num_layers: 12
+  num_heads: 6
+  hidden_dim: 384
+  mlp_dim: 1536
+  dropout: 0.1
+  attention_dropout: 0.1
+  num_classes: 100
+
+optimizer:
+  name: "adamw"
+  lr: 3e-4
+  weight_decay: 0.05
+  betas: [0.9, 0.999]
+
+scheduler:
+  name: "cosine_schedule_with_warmup"
+  num_cycles: 0.5
+  num_warmup_steps: 2000
+  num_training_steps: 40000
+  # num_warmup_steps: 5
+  # num_training_steps: 50
+
+augment:
+  train:
+    - {name: "RandomCrop", size: 32, padding: 4}
+    - {name: "RandomHorizontalFlip", p: 0.5}
+    - {name: "RandAugment", n: 2, m: 9}
+    - {name: "ToTensor", }
+    - {name: "RandomErasing", p: 0.5, scale: [0.02, 0.33], ratio: [0.3, 3.3], value: 0, same_on_batch: False}
+    - {name: "Normalize", mean: [0.5071,0.4867,0.4408], std: [0.2675,0.2565,0.2761]} # cifar100
+  eval:
+    - {name: "ToTensor", }
+    - {name: "Normalize", mean: [0.5071,0.4867,0.4408], std: [0.2675,0.2565,0.2761]} # cifar100
+
+batch_aug:
+  name: "mixcut"
+  mixup_alpha: 0.2
+  cutmix_alpha: 1.0
+  p: 1.0
+  switch_prob: 0.5
+  num_classes: 100
+
+loss:
+  name: "label_smoothing"
+  label_smoothing: 0.1
+
+logger:
+  name: "simple"
+
+trainer:
+  name : "classifier_trainer"
+  epochs: 200
+  grad_clip: 1.0
+  amp: true             # mixed precision
+  val_interval: 1       # 에폭 단위 검증
+  # log_step: 2  
+  # log_step: 50  
+  
+checkpoint_saver:
+  save_dir: "/content/drive/MyDrive/Colab_sample_checkpoints/ViT_small/cifar100/epoch200"
+  save_best: true
+  save_last: true
+  mode: "max"
