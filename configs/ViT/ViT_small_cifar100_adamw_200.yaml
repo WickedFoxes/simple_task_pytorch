@@ -50,12 +50,6 @@ augment:
     - {name: "ToTensor", }
     - {name: "Normalize", mean: [0.5071,0.4867,0.4408], std: [0.2675,0.2565,0.2761]} # cifar100
 
-batch_aug:
-  name: "mixup"
-  alpha: 1.0
-  p: 0.5            # 0~1, 배치별 적용 확률
-  num_classes: 100
-
 loss:
   name: "label_smoothing"
   label_smoothing: 0.1
@@ -69,11 +63,9 @@ trainer:
   grad_clip: 1.0
   amp: true             # mixed precision
   val_interval: 1       # 에폭 단위 검증
-  # log_step: 2  
-  # log_step: 50  
   
 checkpoint_saver:
-  save_dir: "/content/drive/MyDrive/Colab_sample_checkpoints/ViT_small/cifar100"
+  save_dir: "/content/drive/MyDrive/Colab_sample_checkpoints/ViT/ViT_small_cifar100_adamw_200"
   save_best: true
-  save_last: true
+  save_last: False
   mode: "max"

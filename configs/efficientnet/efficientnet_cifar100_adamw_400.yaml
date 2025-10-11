@@ -5,22 +5,24 @@ dataset:
   name: "cifar100"
   root: "./data/cifar100"
   num_workers: 8
-  batch_size: 128
+  batch_size: 256
   pin_memory: true
 
 model:
-  name: "mobilenet_v3_large"
+  name: "efficientnet_b0"
   num_classes: 100
+  drop_rate: 0.1
 
 optimizer:
-  name: "sgd"
-  lr: 0.1
-  weight_decay: 0.0005
+  name: "adamw"
+  lr: 0.001
+  weight_decay: 0.05
 
 scheduler:
-  name: "cosine"
-  max_epochs: 50
-  min_lr: 1e-6
+  name: "cosine_schedule_with_warmup"
+  num_warmup_steps: 4000
+  num_training_steps: 80000
+  num_cycles: 0.5
 
 augment:
   train:
@@ -34,19 +36,19 @@ augment:
     - {name: "Normalize", mean: [0.5071,0.4867,0.4408], std: [0.2675,0.2565,0.2761]} # cifar100
 
 loss:
-  name: "cross_entropy"
+  name: "label_smoothing"
 
 logger:
   name: "simple"
 
 trainer:
   name : "classifier_trainer"
-  epochs: 50
+  epochs: 400
   grad_clip: 1.0
   amp: true             # mixed precision
   val_interval: 1       # 에폭 단위 검증
 
 checkpoint_saver:
-  save_dir: "checkpoints/cifar100/mobilenet_v3_large"
+  save_dir: "checkpoints/cifar100/efficientnet/efficientnet_cifar100_adamw_400"
   save_best: true
   save_last: false

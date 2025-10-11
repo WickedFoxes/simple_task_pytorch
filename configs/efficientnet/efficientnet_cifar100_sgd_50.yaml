@@ -2,25 +2,27 @@ seed: 42
 device: "cuda"
 
 dataset:
-  name: "cifar10"
-  root: "./data/cifar10"
+  name: "cifar100"
+  root: "./data/cifar100"
   num_workers: 8
-  batch_size: 128
+  batch_size: 256
   pin_memory: true
 
 model:
-  name: "resnet_mini_v2_28"
-  num_classes: 10
+  name: "efficientnet_b0"
+  num_classes: 100
+  drop_rate: 0.1
 
 optimizer:
   name: "sgd"
-  lr: 0.1
+  lr: 0.2
   weight_decay: 0.0005
 
 scheduler:
-  name: "cosine"
-  max_epochs: 50
-  min_lr: 1e-6
+  name: "cosine_schedule_with_warmup"
+  num_warmup_steps: 500
+  num_training_steps: 10000
+  num_cycles: 0.5
 
 augment:
   train:
@@ -28,13 +30,13 @@ augment:
     - {name: "RandomHorizontalFlip", p: 0.5}
     - {name: "RandAugment", n: 2, m: 9}
     - {name: "ToTensor", }
-    - {name: "Normalize", mean: [0.491,0.482,0.447], std: [0.247,0.243,0.262]} # cifar10
+    - {name: "Normalize", mean: [0.5071,0.4867,0.4408], std: [0.2675,0.2565,0.2761]} # cifar100
   eval:
     - {name: "ToTensor", }
-    - {name: "Normalize", mean: [0.491,0.482,0.447], std: [0.247,0.243,0.262]} # cifar10
+    - {name: "Normalize", mean: [0.5071,0.4867,0.4408], std: [0.2675,0.2565,0.2761]} # cifar100
 
 loss:
-  name: "cross_entropy"
+  name: "label_smoothing"
 
 logger:
   name: "simple"
@@ -47,6 +49,6 @@ trainer:
   val_interval: 1       # 에폭 단위 검증
 
 checkpoint_saver:
-  save_dir: "checkpoints/resnet_mini_v2_28"
+  save_dir: "checkpoints/cifar100/efficientnet/efficientnet_cifar100_sgd_50"
   save_best: true
   save_last: false

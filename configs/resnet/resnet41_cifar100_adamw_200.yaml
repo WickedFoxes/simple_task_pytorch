@@ -1,0 +1,53 @@
+seed: 42
+device: "cuda"
+
+dataset:
+  name: "cifar100"
+  root: "./data/cifar100"
+  num_workers: 8
+  batch_size: 256
+  pin_memory: true
+
+model:
+  name: "resnet_mini_v2_41"
+  num_classes: 100
+
+optimizer:
+  name: "adamw"
+  lr: 0.001
+  weight_decay: 0.05
+
+scheduler:
+  name: "cosine_schedule_with_warmup"
+  num_warmup_steps: 2000
+  num_training_steps: 40000
+  num_cycles: 0.5
+
+augment:
+  train:
+    - {name: "RandomCrop", size: 32, padding: 4}
+    - {name: "RandomHorizontalFlip", p: 0.5}
+    - {name: "RandAugment", n: 2, m: 9}
+    - {name: "ToTensor", }
+    - {name: "Normalize", mean: [0.5071,0.4867,0.4408], std: [0.2675,0.2565,0.2761]} # cifar100
+  eval:
+    - {name: "ToTensor", }
+    - {name: "Normalize", mean: [0.5071,0.4867,0.4408], std: [0.2675,0.2565,0.2761]} # cifar100
+
+loss:
+  name: "label_smoothing"
+
+logger:
+  name: "simple"
+
+trainer:
+  name : "classifier_trainer"
+  epochs: 200
+  grad_clip: 1.0
+  amp: true             # mixed precision
+  val_interval: 1       # 에폭 단위 검증
+
+checkpoint_saver:
+  save_dir: "checkpoints/cifar100/resnet/resnet41_cifar100_adamw_200"
+  save_best: true
+  save_last: false

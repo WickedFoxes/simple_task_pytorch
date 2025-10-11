@@ -5,11 +5,11 @@ dataset:
   name: "cifar100"
   root: "./data/cifar100"
   num_workers: 8
-  batch_size: 128
+  batch_size: 256
   pin_memory: true
 
 model:
-  name: "resnet_mini_v2_14x2"
+  name: "resnet_mini_v2_41"
   num_classes: 100
 
 optimizer:
@@ -29,10 +29,19 @@ augment:
     - {name: "RandomHorizontalFlip", p: 0.5}
     - {name: "RandAugment", n: 2, m: 9}
     - {name: "ToTensor", }
+    - {name: "RandomErasing", p: 0.5, scale: [0.02, 0.33], ratio: [0.3, 3.3], value: 0, same_on_batch: False}
     - {name: "Normalize", mean: [0.5071,0.4867,0.4408], std: [0.2675,0.2565,0.2761]} # cifar100
   eval:
     - {name: "ToTensor", }
     - {name: "Normalize", mean: [0.5071,0.4867,0.4408], std: [0.2675,0.2565,0.2761]} # cifar100
+
+batch_aug:
+  name: "mixcut"
+  mixup_alpha: 0.2
+  cutmix_alpha: 1.0
+  p: 1.0
+  switch_prob: 0.5
+  num_classes: 100
 
 loss:
   name: "label_smoothing"
@@ -42,12 +51,12 @@ logger:
 
 trainer:
   name : "classifier_trainer"
-  epochs: 200
+  epochs: 400
   grad_clip: 1.0
   amp: true             # mixed precision
   val_interval: 1       # 에폭 단위 검증
 
 checkpoint_saver:
-  save_dir: "checkpoints/cifar100/resnet_mini_v2_14x2"
+  save_dir: "checkpoints/cifar100/resnet/resnet41_cifar100_sgd_aug_400"
   save_best: true
   save_last: false

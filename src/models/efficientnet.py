@@ -130,7 +130,7 @@ def _make_divisible(v, divisor=8, min_value=None):
 
 class EfficientNet(nn.Module):
     """EfficientNet architecture"""
-    def __init__(self, block_args_list, width_mult=1.0, depth_mult=1.0, image_size=224, num_classes=1000, drop_rate=0.2, drop_path_rate=0.0):
+    def __init__(self, block_args_list, width_mult=1.0, depth_mult=1.0, num_classes=1000, drop_rate=0.2, drop_path_rate=0.0):
         super(EfficientNet, self).__init__()
         
         # Stem
@@ -251,90 +251,11 @@ BASE_BLOCK_ARGS = [
 
 @register("model", "efficientnet_b0")
 class EfficientNetB0(EfficientNet, ModelBase):
-    def __init__(self, num_classes=100, **kwargs):
-        width_mult, depth_mult, image_size = EFFICIENTNET_PARAMS['b0']
+    def __init__(self, **kwargs):
+        width_mult, depth_mult = EFFICIENTNET_PARAMS['b0']
         super().__init__(
             block_args_list=BASE_BLOCK_ARGS,
             width_mult=width_mult,
             depth_mult=depth_mult,
-            image_size=image_size,
-            num_classes=num_classes,
-            **kwargs
-        )
-
-
-# Pretrained version using torchvision
-import torchvision
-@register("model", "efficientnet_b0_pretrained")
-class EfficientNetB0Pretrained(ModelBase):
-    def __init__(self, num_classes=100, **kwargs):
-        super().__init__(**kwargs)
-
-        # Load pretrained EfficientNet-B0
-        self.model = torchvision.models.efficientnet_b0(
-            weights=torchvision.models.EfficientNet_B0_Weights.IMAGENET1K_V1
-        )
-
-        # Modify classifier for custom number of classes
-        in_features = self.model.classifier[1].in_features
-        self.model.classifier[1] = nn.Linear(in_features, num_classes)
-
-    def forward(self, x):
-        return self.model(x)
-
-@register("model", "efficientnet_mini_28")
-class EfficientNet_mini_28(EfficientNet, ModelBase):
-    def __init__(self, num_classes=100, **kwargs):
-        width_mult, depth_mult, image_size = EFFICIENTNET_PARAMS['b0']
-        
-        mini_block_args = [
-            {'kernel_size': 3, 'num_repeat': 3, 'output_channels': 64, 'expand_ratio': 6, 'stride': 1, 'se_ratio': 0.25}, 
-            {'kernel_size': 3, 'num_repeat': 4, 'output_channels': 128, 'expand_ratio': 6, 'stride': 2, 'se_ratio': 0.25},
-            {'kernel_size': 3, 'num_repeat': 6, 'output_channels': 256, 'expand_ratio': 6, 'stride': 2, 'se_ratio': 0.25},
-        ]
-        super().__init__(
-            block_args_list=mini_block_args,
-            width_mult=width_mult,
-            depth_mult=depth_mult,
-            image_size=image_size,
-            num_classes=num_classes,
-            **kwargs
-        )
-
-@register("model", "efficientnet_mini_14x2")
-class EfficientNet_mini_14x2(EfficientNet, ModelBase):
-    def __init__(self, num_classes=100, **kwargs):
-        width_mult, depth_mult, image_size = EFFICIENTNET_PARAMS['b0']
-        
-        mini_block_args = [
-            {'kernel_size': 3, 'num_repeat': 2, 'output_channels': 128, 'expand_ratio': 6, 'stride': 1, 'se_ratio': 0.25}, 
-            {'kernel_size': 3, 'num_repeat': 2, 'output_channels': 256, 'expand_ratio': 6, 'stride': 2, 'se_ratio': 0.25},
-            {'kernel_size': 3, 'num_repeat': 2, 'output_channels': 512, 'expand_ratio': 6, 'stride': 2, 'se_ratio': 0.25},
-        ]
-        super().__init__(
-            block_args_list=mini_block_args,
-            width_mult=width_mult,
-            depth_mult=depth_mult,
-            image_size=image_size,
-            num_classes=num_classes,
-            **kwargs
-        )
-
-@register("model", "efficientnet_mini")
-class EfficientNet_mini(EfficientNet, ModelBase):
-    def __init__(self, num_classes=100, efficientnet_type: str = 'b2', **kwargs):
-        width_mult, depth_mult, image_size = EFFICIENTNET_PARAMS[efficientnet_type]
-        
-        mini_block_args = [
-            {'kernel_size': 3, 'num_repeat': 2, 'output_channels': 64, 'expand_ratio': 2, 'stride': 1, 'se_ratio': 0.25}, 
-            {'kernel_size': 3, 'num_repeat': 2, 'output_channels': 128, 'expand_ratio': 2, 'stride': 2, 'se_ratio': 0.25},
-            {'kernel_size': 3, 'num_repeat': 2, 'output_channels': 256, 'expand_ratio': 2, 'stride': 2, 'se_ratio': 0.25},
-        ]
-        super().__init__(
-            block_args_list=mini_block_args,
-            width_mult=width_mult,
-            depth_mult=depth_mult,
-            image_size=image_size,
-            num_classes=num_classes,
             **kwargs
         )

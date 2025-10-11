@@ -1,43 +1,27 @@
 seed: 42
 device: "cuda"
 
-# checkpoint_loader:
-#   path: "/content/drive/MyDrive/Colab_sample_checkpoints/transformer_tl/wmt16_de_en/epoch003.ckpt"
-
 dataset:
   name: "cifar100"
-  root: "/content/drive/MyDrive/Colab_sample_data/cifar100"
+  root: "./data/cifar100"
   num_workers: 8
   batch_size: 256
   pin_memory: true
-  # max_train_data_len: 2560
-  # max_eval_data_len: 256
 
 model:
-  name: "ViT"
-  image_size: 32
-  patch_size: 4
-  num_layers: 12
-  num_heads: 6
-  hidden_dim: 384
-  mlp_dim: 1536
-  dropout: 0.1
-  attention_dropout: 0.1
+  name: "resnet_mini_v2_41"
   num_classes: 100
 
 optimizer:
-  name: "adamw"
-  lr: 3e-4
-  weight_decay: 0.05
-  betas: [0.9, 0.999]
+  name: "sgd"
+  lr: 0.2
+  weight_decay: 0.0005
 
 scheduler:
   name: "cosine_schedule_with_warmup"
-  num_cycles: 0.5
   num_warmup_steps: 6000
   num_training_steps: 120000
-  # num_warmup_steps: 5
-  # num_training_steps: 50
+  num_cycles: 0.5
 
 augment:
   train:
@@ -61,7 +45,6 @@ batch_aug:
 
 loss:
   name: "label_smoothing"
-  label_smoothing: 0.1
 
 logger:
   name: "simple"
@@ -72,11 +55,8 @@ trainer:
   grad_clip: 1.0
   amp: true             # mixed precision
   val_interval: 1       # 에폭 단위 검증
-  # log_step: 2  
-  # log_step: 50  
-  
+
 checkpoint_saver:
-  save_dir: "/content/drive/MyDrive/Colab_sample_checkpoints/ViT_small/cifar100/epoch600"
+  save_dir: "checkpoints/cifar100/resnet/resnet41_cifar100_sgd_aug_600"
   save_best: true
-  save_last: true
-  mode: "max"
+  save_last: false
