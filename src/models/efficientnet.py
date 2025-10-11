@@ -252,7 +252,7 @@ BASE_BLOCK_ARGS = [
 @register("model", "efficientnet_b0")
 class EfficientNetB0(EfficientNet, ModelBase):
     def __init__(self, **kwargs):
-        width_mult, depth_mult = EFFICIENTNET_PARAMS['b0']
+        width_mult, depth_mult, _ = EFFICIENTNET_PARAMS['b0']
         super().__init__(
             block_args_list=BASE_BLOCK_ARGS,
             width_mult=width_mult,
