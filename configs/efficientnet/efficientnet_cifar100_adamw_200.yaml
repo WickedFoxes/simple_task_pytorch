@@ -49,6 +49,6 @@ trainer:
   val_interval: 1       # 에폭 단위 검증
 
 checkpoint_saver:
-  save_dir: "/content/drive/MyDrive/Colab_sample_checkpoints/cifar100/efficientnet/efficientnet_cifar100_adamw_200"
+  save_dir: "/content/drive/MyDrive/Colab_sample_checkpoints/efficientnet/efficientnet_cifar100_adamw_200"
   save_best: true
   save_last: false

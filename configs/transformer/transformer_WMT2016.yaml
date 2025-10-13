@@ -62,7 +62,7 @@ trainer:
   # log_step: 2
 
 checkpoint_saver:
-  save_dir: "/content/drive/MyDrive/Colab_sample_checkpoints/wmt16_de_en/transformer_tl"
+  save_dir: "/content/drive/MyDrive/Colab_sample_checkpoints/transformer_tl/transformer_tl_wmt16_de_en"
   save_best: true
   save_last: true
   mode: "min"
