@@ -48,6 +48,6 @@ trainer:
   val_interval: 1       # 에폭 단위 검증
 
 checkpoint_saver:
-  save_dir: "checkpoints/cifar100/resnet/resnet41_cifar100_sgd_400"
+  save_dir: "/content/drive/MyDrive/Colab_sample_checkpoints/cifar100/resnet/resnet41_cifar100_sgd_400"
   save_best: true
   save_last: false

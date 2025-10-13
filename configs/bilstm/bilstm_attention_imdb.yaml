@@ -47,7 +47,7 @@ trainer:
   save_best: true
 
 checkpoint_saver:
-  save_dir: "checkpoints/lstm_attention_classifier"
+  save_dir: "/content/drive/MyDrive/Colab_sample_checkpoints/imdb/lstm_attention_classifier"
   save_best: true
   save_last: false
 
