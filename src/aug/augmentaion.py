@@ -4,6 +4,7 @@ from torchvision import transforms
 _AUG_MAP = {
   "Resize": lambda **p: transforms.Resize(p["size"], interpolation=p.get("interpolation", transforms.InterpolationMode.BILINEAR)),
   "RandomCrop": lambda **p: transforms.RandomCrop(p["size"], padding=p.get("padding", 0)),
+  "RandomResizedCrop": lambda **p: transforms.RandomResizedCrop(p["size"], scale=p.get("scale", (0.08, 1.0)), ratio=p.get("ratio", (3./4., 4./3.))),
   "RandomHorizontalFlip": lambda **p: transforms.RandomHorizontalFlip(p.get("p", 0.5)),
   "RandAugment": lambda **p: transforms.RandAugment(num_ops=p.get("n",2), magnitude=p.get("m",9)),
   "ToTensor": lambda **p: transforms.ToTensor(),

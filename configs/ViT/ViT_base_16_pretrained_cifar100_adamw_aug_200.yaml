@@ -14,7 +14,7 @@ dataset:
   # max_eval_data_len: 256
 
 model:
-  name: "ViT"
+  name: "ViT_imagenet1k"
   num_classes: 100
   # image_size: 32
   # patch_size: 4
