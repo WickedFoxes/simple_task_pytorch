@@ -11,6 +11,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.modules.container import ModuleList
 
+import torchvision
+
 from src.registry import register
 from src.models.base import ModelBase
 
@@ -380,3 +382,15 @@ class MultiheadAttention(nn.Module):
         out = self.out_proj(attn_out)  # (B, L, D)
         return out
     
+
+@register("model", "ViT_imagenet1k")
+class VisionTransformer_Imagenet1k(nn.Module):
+    def __init__(self, num_classes=100, **kwargs):
+        super().__init__(**kwargs)
+        
+        self.weight = torchvision.models.ViT_B_16_Weights.IMAGENET1K_V1
+        self.model = torchvision.models.vit_b_16(weights=self.weight)
+        self.model.heads.head = nn.Linear(self.model.heads.head.in_features, num_classes)
+
+    def forward(self, x):
+        return self.model(x)

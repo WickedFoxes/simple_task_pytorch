@@ -2,7 +2,7 @@ from torchvision import transforms
 
 # 필요 시 Albumentations 도 같은 방식으로 추가 등록 가능
 _AUG_MAP = {
-  "Resize": lambda **p: transforms.Resize(p["size"]),
+  "Resize": lambda **p: transforms.Resize(p["size"], interpolation=p.get("interpolation", transforms.InterpolationMode.BILINEAR)),
   "RandomCrop": lambda **p: transforms.RandomCrop(p["size"], padding=p.get("padding", 0)),
   "RandomHorizontalFlip": lambda **p: transforms.RandomHorizontalFlip(p.get("p", 0.5)),
   "RandAugment": lambda **p: transforms.RandAugment(num_ops=p.get("n",2), magnitude=p.get("m",9)),
