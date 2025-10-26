@@ -254,6 +254,12 @@ class ResNet_mini_v2(nn.Module):
         x = self.fc(x)
         return x
 
+@register("model", "resnet_mini_v2_14")
+class ResNet_mini_v2_14(ResNet_mini_v2, ModelBase):
+    def __init__(self, **kwargs):
+        # Call the parent class's constructor with the fixed layers
+        super().__init__(layers=[2, 2, 2], k=4, block = BasicBlock, **kwargs)
+
 @register("model", "resnet_mini_v2_28")
 class ResNet_mini_v2_28(ResNet_mini_v2, ModelBase):
     def __init__(self, **kwargs):
