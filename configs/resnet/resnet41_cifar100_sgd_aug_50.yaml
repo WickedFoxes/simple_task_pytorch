@@ -20,7 +20,7 @@ optimizer:
 scheduler:
   name: "cosine_schedule_with_warmup"
   num_warmup_steps: 500
-  num_training_steps: 8000
+  num_training_steps: 10000
   num_cycles: 0.5
 
 augment:
